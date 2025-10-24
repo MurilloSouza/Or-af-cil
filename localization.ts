@@ -260,9 +260,11 @@ const translations: Translations = {
     "subscription.plan.basic": { en: "Basic", pt: "Básico", zh: "基础版", es: "Básico", de: "Basis" },
     "subscription.plan.basic-plus": { en: "Basic+", pt: "Básico+", zh: "基础+", es: "Básico+", de: "Basic+" },
     "subscription.plan.premium": { en: "Premium", pt: "Premium", zh: "高级版", es: "Premium", de: "Premium" },
+    "subscription.plan.premium-plus": { en: "Premium+", pt: "Premium+", zh: "高级+", es: "Premium+", de: "Premium+" },
     "subscription.plan.lifetime": { en: "Lifetime", pt: "Vitalício", zh: "终身版", es: "Vitalicio", de: "Lebenslang" },
     "subscription.loginRequired": { en: "Please log in to select a plan.", pt: "Por favor, faça login para selecionar um plano.", zh: "请登录以选择计划。", es: "Por favor, inicia sesión para seleccionar un plan.", de: "Bitte melden Sie sich an, um einen Plan auszuwählen." },
-    "subscription.bestValue": { en: "Best Value", pt: "Custo-Benefício", zh: "最佳价值", es: "Mejor Valor", de: "Bestes Preis-Leistungs-Verhältnis" }
+    "subscription.bestValue": { en: "Best Value", pt: "Custo-Benefício", zh: "最佳价值", es: "Mejor Valor", de: "Bestes Preis-Leistungs-Verhältnis" },
+    "subscription.mostComplete": { en: "Most Complete", pt: "Mais Completo", zh: "最完整", es: "Más Completo", de: "Vollständigste" }
 };
 
 export const getTranslator = (lang: Language) => (key: string, replacements?: { [key: string]: string | number }): string => {

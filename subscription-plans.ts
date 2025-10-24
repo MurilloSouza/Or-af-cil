@@ -1,7 +1,7 @@
 // =================================================================================
 // The checkout is now handled by Stripe.
 // You MUST create products and prices in your Stripe dashboard and replace
-// the placeholder `price_...` IDs below with your actual Stripe Price IDs.
+// the placeholder `price_..._REPLACE_ME` IDs below with your actual Stripe Price IDs.
 // =================================================================================
 
 import { SubscriptionPlan } from './types';
@@ -39,7 +39,7 @@ export const subscriptionPlans: Record<SubscriptionPlan, PlanDetails> = {
     name: "Free",
     price: 0,
     maxBudgets: 1,
-    maxItemsPerBudget: 10,
+    maxItemsPerBudget: 25,
     maxGroups: Infinity, // Cannot add new ones, but can use existing
     features: {
       pricing: false,
@@ -52,42 +52,18 @@ export const subscriptionPlans: Record<SubscriptionPlan, PlanDetails> = {
       addGroups: false,
     },
   },
-  basic: {
-    name: "Basic",
-    prices: {
-        monthly: 4.99,
-        annual: 49.99 
-    },
-    priceIds: {
-        monthly: 'price_0KxBDm589O8KAxCGMgG7scjb', // Example ID updated
-        annual: 'price_REPLACE_WITH_BASIC_ANNUAL_ID'
-    },
-    maxBudgets: 5,
-    maxItemsPerBudget: 20,
-    maxGroups: 5,
-    features: {
-      pricing: true,
-      aiAssistant: false,
-      importExportFormulas: false,
-      exportPdfExcel: true,
-      customizePdf: false,
-      dashboard: true,
-      addCustomizeFormulas: true,
-      addGroups: true,
-    },
-  },
   'basic-plus': {
     name: "Basic+",
     prices: {
         monthly: 9.99,
-        annual: 99.99
+        annual: 78.00
     },
     priceIds: {
-        monthly: 'price_REPLACE_WITH_BASIC_PLUS_MONTHLY_ID',
-        annual: 'price_REPLACE_WITH_BASIC_PLUS_ANNUAL_ID'
+        monthly: 'price_BASIC_PLUS_MONTHLY_REPLACE_ME',
+        annual: 'price_BASIC_PLUS_ANNUAL_REPLACE_ME'
     },
     maxBudgets: 25,
-    maxItemsPerBudget: 30,
+    maxItemsPerBudget: 100,
     maxGroups: 10,
     features: {
       pricing: true,
@@ -104,11 +80,36 @@ export const subscriptionPlans: Record<SubscriptionPlan, PlanDetails> = {
     name: "Premium",
     prices: {
         monthly: 19.99,
-        annual: 199.99
+        annual: 155.00
     },
     priceIds: {
-        monthly: 'price_REPLACE_WITH_PREMIUM_MONTHLY_ID',
-        annual: 'price_REPLACE_WITH_PREMIUM_ANNUAL_ID'
+        monthly: 'price_PREMIUM_MONTHLY_REPLACE_ME',
+        annual: 'price_PREMIUM_ANNUAL_REPLACE_ME'
+    },
+    maxBudgets: 100,
+    maxItemsPerBudget: 500,
+    maxGroups: 50,
+    features: {
+      pricing: true,
+      aiAssistant: true,
+      importExportFormulas: true,
+      exportPdfExcel: true,
+      customizePdf: true,
+      dashboard: true,
+      addCustomizeFormulas: true,
+      addGroups: true,
+      futureFeatures: false,
+    },
+  },
+  'premium-plus': {
+    name: "Premium+",
+    prices: {
+        monthly: 27.99,
+        annual: 220.00
+    },
+    priceIds: {
+        monthly: 'price_PREMIUM_PLUS_MONTHLY_REPLACE_ME',
+        annual: 'price_PREMIUM_PLUS_ANNUAL_REPLACE_ME'
     },
     maxBudgets: Infinity,
     maxItemsPerBudget: Infinity,
@@ -127,9 +128,9 @@ export const subscriptionPlans: Record<SubscriptionPlan, PlanDetails> = {
   },
   lifetime: {
       name: "Lifetime",
-      price: 249.99,
+      price: 1350.00,
       priceIds: {
-        oneTime: 'price_REPLACE_WITH_LIFETIME_ID'
+        oneTime: 'price_LIFETIME_REPLACE_ME'
       },
       maxBudgets: Infinity,
       maxItemsPerBudget: Infinity,

@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > **Action Required: Update Stripe Price IDs**
-> You MUST replace all placeholder Price IDs (e.g., `price_REPLACE_WITH_...`) in **two** files:
+> You MUST replace all placeholder Price IDs (e.g., `price_..._REPLACE_ME`) in **two** files:
 > 1.  `subscription-plans.ts` (for the frontend)
 > 2.  `functions/src/index.ts` (in the `planMap` constant within the backend code below)
 >
@@ -178,16 +178,20 @@ app.post("/", express.raw({ type: "application/json" }), async (req, res) => {
 
     functions.logger.info(`Received Stripe event: ${event.type}`);
 
+    // Map your Stripe Price IDs to your internal plan names.
+    // THIS MUST MATCH THE IDs IN `subscription-plans.ts`
     const planMap: { [key: string]: string } = {
-        // --- Add your RECURRING plan Price IDs here ---
-        "price_0KxBDm589O8KAxCGMgG7scjb": "basic", // Example ID updated
-        "price_REPLACE_WITH_BASIC_ANNUAL_ID": "basic",
-        "price_REPLACE_WITH_BASIC_PLUS_MONTHLY_ID": "basic-plus",
-        "price_REPLACE_WITH_BASIC_PLUS_ANNUAL_ID": "basic-plus",
-        "price_REPLACE_WITH_PREMIUM_MONTHLY_ID": "premium",
-        "price_REPLACE_WITH_PREMIUM_ANNUAL_ID": "premium",
-        // --- Add your ONE-TIME plan Price IDs here ---
-        "price_REPLACE_WITH_LIFETIME_ID": "lifetime",
+        // --- Basic+ Plan ---
+        "price_BASIC_PLUS_MONTHLY_REPLACE_ME": "basic-plus",
+        "price_BASIC_PLUS_ANNUAL_REPLACE_ME": "basic-plus",
+        // --- Premium Plan ---
+        "price_PREMIUM_MONTHLY_REPLACE_ME": "premium",
+        "price_PREMIUM_ANNUAL_REPLACE_ME": "premium",
+        // --- Premium+ Plan ---
+        "price_PREMIUM_PLUS_MONTHLY_REPLACE_ME": "premium-plus",
+        "price_PREMIUM_PLUS_ANNUAL_REPLACE_ME": "premium-plus",
+        // --- Lifetime Plan (One-Time) ---
+        "price_LIFETIME_REPLACE_ME": "lifetime",
     };
 
     try {
