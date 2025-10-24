@@ -1,0 +1,23 @@
+{
+  "name": "Gerador de Orçamentos",
+  "short_name": "Orçamentos",
+  "description": "Um aplicativo para simplificar a criação de orçamentos.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8B5CF6",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzhCNUNGNiIgd2lkdGg9IjE5MnB4IiBoZWlnaHQ9IjE5MnB4Ij48cGF0aCBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTIyIDguNTh2Ni44NGwtNC0yLjMxdi0yLjQzbDQgMi4zMXptLTIgMS4xM1YxMEgNC3Y0aDZ2Mkg0VjZoMTZ2My43MXpNMiA4djhoMTB2LTNIMlY4em0yIDNoOHYtMUg0djF6Ii8+PC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzhCNUNGNiIgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjUxMnB4Ij48cGF0aCBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTIyIDguNTh2Ni44NGwtNC0yLjMxdi0yLjQzbDQgMi4zMXptLTIgMS4xM1YxMEgNC3Y0aDZ2Mkg0VjZoMTZ2My43MXpNMiA4djhoMTB2LTNIMlY4em0yIDNoOHYtMUg0djF6Ii8+PC9zdmc+",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

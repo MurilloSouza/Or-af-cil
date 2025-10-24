@@ -1,0 +1,5 @@
+{
+  "name": "Gerador de Orçamentos",
+  "description": "Um aplicativo para simplificar a criação de orçamentos, com abas para Dashboard com gráficos, uma tabela detalhada de Orçamento, uma área de Cálculo para adicionar itens e Configurações.",
+  "requestFramePermissions": []
+}

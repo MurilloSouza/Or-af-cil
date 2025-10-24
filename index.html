@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerador de Orçamentos</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#8B5CF6" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class', // Habilita o modo escuro baseado em classe
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                DEFAULT: '#8B5CF6', // Roxo principal (violet-500)
+                light: '#A78BFA',   // Um roxo mais claro para hover (violet-400)
+                dark: '#7C3AED',    // Um roxo mais escuro (violet-600)
+              },
+              secondary: '#58595B', // Cinza do logo Lógica Sul
+              background: '#f8fafc', // Cinza muito claro para o fundo
+              surface: '#ffffff', // Branco para cartões e superfícies
+              text: '#1e293b', // Cinza escuro para texto
+              subtle: '#64748b', // Cinza mais claro para texto secundário
+            },
+            fontFamily: {
+              sans: ['Poppins', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
+      }
+    </style>
+    <!-- Bibliotecas para PDF e Excel, carregadas de um CDN para garantir funcionamento -->
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@latest/dist/jspdf.plugin.autotable.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- Stripe.js for payment processing -->
+    <script src="https://js.stripe.com/v3/"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0",
+    "recharts": "https://aistudiocdn.com/recharts@^2.13.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js",
+    "firebase/analytics": "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js",
+    "firebase/functions": "https://www.gstatic.com/firebasejs/12.3.0/firebase-functions.js",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.3.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-background text-text dark:bg-gray-900 dark:text-gray-100">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
