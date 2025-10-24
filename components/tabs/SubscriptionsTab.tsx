@@ -29,17 +29,18 @@ const PlanCard: React.FC<{
   isActive: boolean;
   onSelect: () => Promise<void>;
 }> = ({ planType, billingCycle, isActive, onSelect }) => {
-  const { t } = useLocalization();
+  const { t, formatCurrency } = useLocalization();
   const { user } = useAuth();
   const cardDetails = subscriptionPlans[planType];
   const [isLoading, setIsLoading] = React.useState(false);
 
   const getPrice = () => {
     if (planType === 'free' || planType === 'lifetime') {
-      return `$${cardDetails.price}`;
+        return cardDetails.price !== undefined ? formatCurrency(cardDetails.price) : '';
     }
     if (cardDetails.prices) {
-      return billingCycle === 'annual' ? `$${cardDetails.prices.annual}` : `$${cardDetails.prices.monthly}`;
+        const price = billingCycle === 'annual' ? cardDetails.prices.annual : cardDetails.prices.monthly;
+        return formatCurrency(price);
     }
     return '';
   };
@@ -57,6 +58,7 @@ const PlanCard: React.FC<{
   }
 
   const isLifetime = planType === 'lifetime';
+  const isPremiumPlus = planType === 'premium-plus';
   const shouldBeDisabled = isActive || !user || isLoading;
 
   let buttonText = t('subscription.selectPlan');
@@ -72,8 +74,13 @@ const PlanCard: React.FC<{
                 {t('subscription.bestValue')}
             </div>
         )}
-        <div className={`border-2 rounded-lg p-6 flex flex-col h-full ${isActive ? 'border-primary shadow-2xl scale-105' : isLifetime ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-gray-200 dark:border-gray-700'} transition-all`}>
-            <h3 className={`text-2xl font-bold ${isLifetime ? 'text-yellow-600 dark:text-yellow-300' : 'text-primary dark:text-primary-light'}`}>{t(`subscription.plan.${planType}`)}</h3>
+        {isPremiumPlus && (
+            <div className="absolute top-0 right-0 -mt-3 mr-3 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg transform rotate-6">
+                {t('subscription.mostComplete')}
+            </div>
+        )}
+        <div className={`border-2 rounded-lg p-6 flex flex-col h-full ${isActive ? 'border-primary shadow-2xl scale-105' : isLifetime ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : isPremiumPlus ? 'border-indigo-500' : 'border-gray-200 dark:border-gray-700'} transition-all`}>
+            <h3 className={`text-2xl font-bold ${isLifetime ? 'text-yellow-600 dark:text-yellow-300' : isPremiumPlus ? 'text-indigo-600 dark:text-indigo-400' : 'text-primary dark:text-primary-light'}`}>{t(`subscription.plan.${planType}`)}</h3>
             <p className="mt-2 text-4xl font-extrabold text-text dark:text-gray-100">
                 {getPrice()}<span className="text-lg font-medium text-subtle dark:text-gray-400 ml-1">{getBillingText()}</span>
             </p>
@@ -104,7 +111,7 @@ const PlanCard: React.FC<{
                 onClick={handleSelect}
                 disabled={shouldBeDisabled}
                 className={`mt-8 w-full py-3 px-4 rounded-lg font-bold transition-colors disabled:cursor-not-allowed
-                        ${isActive ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400' : isLifetime ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-primary text-white hover:bg-primary-light'}`}
+                        ${isActive ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400' : isLifetime ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : isPremiumPlus ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-primary text-white hover:bg-primary-light'}`}
             >
                 {buttonText}
             </button>
@@ -132,10 +139,8 @@ const SubscriptionsTab: React.FC = () => {
     if (plan === newPlan || !user) return;
 
     if (newPlan === 'free') {
-      // Handle cancellation via Stripe portal, not here.
-      // For now, allow local downgrade for testing.
-      setPlan('free');
-      showToast(`${t('subscription.plan.free')} plan is now active for testing.`, 'success');
+      // Cancellation should be handled via the Stripe Customer Portal, which users can access from the Settings tab.
+      // This button is disabled for the active plan, so this case is mostly theoretical for a logged-in user.
       return;
     }
 
@@ -148,7 +153,7 @@ const SubscriptionsTab: React.FC = () => {
         priceId = billingCycle === 'annual' ? cardDetails.priceIds?.annual : cardDetails.priceIds?.monthly;
     }
     
-    if (!priceId || priceId.includes('REPLACE_WITH')) {
+    if (!priceId || priceId.includes('REPLACE_ME')) {
         showToast(t('toasts.checkoutNotConfigured'), 'error');
         console.error(`Stripe Price ID for ${newPlan} (${billingCycle}) is not configured.`);
         return;
@@ -165,8 +170,8 @@ const SubscriptionsTab: React.FC = () => {
         const { data } = await createStripeCheckoutSession(payload) as { data: { sessionId: string } };
 
         const stripe = (window as any).Stripe(
-          // Your Stripe Publishable Key
-          'pk_test_51PJKPZ589O8KAxCG3bVz6lB5w1h6Z7j1hM3j3B3o3k3Y1r1k1i1d1o1g1g1V1u1i1y1R1j1m1a1C1i1e1r1y1e1p1E1F1'
+          // Replace with your actual Stripe Publishable Key.
+          'pk_live_YOUR_PUBLISHABLE_KEY_REPLACE_ME'
         );
         
         await stripe.redirectToCheckout({ sessionId: data.sessionId });
@@ -202,9 +207,9 @@ const SubscriptionsTab: React.FC = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 items-stretch">
         <PlanCard planType="free" billingCycle={billingCycle} isActive={plan === 'free'} onSelect={() => handleSelectPlan('free')} />
-        <PlanCard planType="basic" billingCycle={billingCycle} isActive={plan === 'basic'} onSelect={() => handleSelectPlan('basic')} />
         <PlanCard planType="basic-plus" billingCycle={billingCycle} isActive={plan === 'basic-plus'} onSelect={() => handleSelectPlan('basic-plus')} />
         <PlanCard planType="premium" billingCycle={billingCycle} isActive={plan === 'premium'} onSelect={() => handleSelectPlan('premium')} />
+        <PlanCard planType="premium-plus" billingCycle={billingCycle} isActive={plan === 'premium-plus'} onSelect={() => handleSelectPlan('premium-plus')} />
         <PlanCard planType="lifetime" billingCycle={billingCycle} isActive={plan === 'lifetime'} onSelect={() => handleSelectPlan('lifetime')} />
       </div>
     </div>

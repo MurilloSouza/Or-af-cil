@@ -124,7 +124,9 @@ const CalculoGeralTab: React.FC<CalculoTabProps> = ({
     onUpdateVariable(activeGroupId, variable.id, 'infoDependencies', newDeps);
   };
   
-  const canAddGroup = planDetails.features.addGroups && (plan !== 'basic' || groups.length < planDetails.maxGroups);
+  // FIX: Corrected logic for checking group limit. The previous check used an invalid plan name 'basic'
+  // and had flawed logic. This now correctly checks if the number of groups is less than the maximum allowed by the current plan.
+  const canAddGroup = planDetails.features.addGroups && groups.length < planDetails.maxGroups;
 
   return (
     <div className="space-y-6 pb-24">

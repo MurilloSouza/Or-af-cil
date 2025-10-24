@@ -8,7 +8,7 @@ export enum Tab {
   Settings = 'SETTINGS',
 }
 
-export type SubscriptionPlan = 'free' | 'basic' | 'basic-plus' | 'premium' | 'lifetime';
+export type SubscriptionPlan = 'free' | 'basic-plus' | 'premium' | 'premium-plus' | 'lifetime';
 export type BillingCycle = 'monthly' | 'annual';
 
 export interface BudgetItem {
