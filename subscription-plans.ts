@@ -59,8 +59,8 @@ export const subscriptionPlans: Record<SubscriptionPlan, PlanDetails> = {
         annual: 78.00
     },
     priceIds: {
-        monthly: 'price_BASIC_PLUS_MONTHLY_REPLACE_ME',
-        annual: 'price_BASIC_PLUS_ANNUAL_REPLACE_ME'
+        monthly: 'https://buy.stripe.com/cNiaEXb4a3zv0Ep7la1gs03',
+        annual: 'https://buy.stripe.com/00w14nfkq5HDgDn8pe1gs05'
     },
     maxBudgets: 25,
     maxItemsPerBudget: 100,
@@ -83,8 +83,8 @@ export const subscriptionPlans: Record<SubscriptionPlan, PlanDetails> = {
         annual: 155.00
     },
     priceIds: {
-        monthly: 'price_PREMIUM_MONTHLY_REPLACE_ME',
-        annual: 'price_PREMIUM_ANNUAL_REPLACE_ME'
+        monthly: 'https://buy.stripe.com/7sY00jegm8TPgDnaxm1gs04',
+        annual: 'https://buy.stripe.com/28E3cvfkqda5evfcFu1gs06'
     },
     maxBudgets: 100,
     maxItemsPerBudget: 500,
@@ -108,8 +108,8 @@ export const subscriptionPlans: Record<SubscriptionPlan, PlanDetails> = {
         annual: 220.00
     },
     priceIds: {
-        monthly: 'price_PREMIUM_PLUS_MONTHLY_REPLACE_ME',
-        annual: 'price_PREMIUM_PLUS_ANNUAL_REPLACE_ME'
+        monthly: 'https://buy.stripe.com/00wfZhb4aee91It34U1gs02',
+        annual: 'https://buy.stripe.com/bJe14nc8e6LH2MxgVK1gs07'
     },
     maxBudgets: Infinity,
     maxItemsPerBudget: Infinity,
@@ -130,7 +130,7 @@ export const subscriptionPlans: Record<SubscriptionPlan, PlanDetails> = {
       name: "Lifetime",
       price: 1350.00,
       priceIds: {
-        oneTime: 'price_LIFETIME_REPLACE_ME'
+        oneTime: 'https://buy.stripe.com/14AcN57RY9XT72NgVK1gs08'
       },
       maxBudgets: Infinity,
       maxItemsPerBudget: Infinity,
