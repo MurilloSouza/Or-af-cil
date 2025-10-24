@@ -4,7 +4,10 @@ import { useLocalization } from '../../LanguageContext';
 import { languages, Language } from '../../localization';
 import { useSubscription } from '../../SubscriptionContext';
 import { useAuth } from '../../AuthContext';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
+const functions = getFunctions();
+const createStripePortalSession = httpsCallable(functions, 'createStripePortalSession');
 
 interface SettingsTabProps {
   markup: number;
@@ -104,6 +107,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   const { plan, planDetails } = useSubscription();
   const { user, logout } = useAuth();
   const [localApiKey, setLocalApiKey] = useState(apiKey);
+  const [isPortalLoading, setIsPortalLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -165,6 +169,23 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
     };
     reader.readAsText(file);
   };
+  
+  const handleManageSubscription = async () => {
+    setIsPortalLoading(true);
+    try {
+        const { data } = await createStripePortalSession({
+            returnUrl: window.location.href,
+        }) as { data: { url: string } };
+
+        window.location.href = data.url;
+    } catch (error) {
+        console.error("Error creating portal session:", error);
+        showToast(t('toasts.portalError'), 'error');
+    } finally {
+        setIsPortalLoading(false);
+    }
+  };
+
 
   return (
     <div className="bg-surface dark:bg-gray-800 rounded-lg shadow-md p-6 animate-fade-in space-y-8">
@@ -185,10 +206,10 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
                       {plan !== 'free' && (
                         <div>
                           <button 
-                            disabled={true} 
-                            title="Gerenciamento de assinatura desativado nesta versão."
+                            onClick={handleManageSubscription}
+                            disabled={isPortalLoading}
                             className="w-full bg-secondary hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            {t('settings.account.manageSubscription')}
+                            {isPortalLoading ? t('toasts.redirectingToCheckout') : t('settings.account.manageSubscription')}
                           </button>
                         </div>
                       )}

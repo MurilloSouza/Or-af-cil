@@ -4,6 +4,11 @@ import { useLocalization } from '../../LanguageContext';
 import { SubscriptionPlan, BillingCycle } from '../../types';
 import { subscriptionPlans } from '../../subscription-plans';
 import { useAuth } from '../../AuthContext';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+const functions = getFunctions();
+const createStripeCheckoutSession = httpsCallable(functions, 'createStripeCheckoutSession');
+
 
 const FeatureItem: React.FC<{ available: boolean; text: string }> = ({ available, text }) => (
   <li className={`flex items-start gap-3 ${available ? 'text-text dark:text-gray-200' : 'text-subtle dark:text-gray-400 line-through'}`}>
@@ -22,11 +27,12 @@ const PlanCard: React.FC<{
   planType: SubscriptionPlan;
   billingCycle: BillingCycle;
   isActive: boolean;
-  onSelect: () => void;
+  onSelect: () => Promise<void>;
 }> = ({ planType, billingCycle, isActive, onSelect }) => {
   const { t } = useLocalization();
   const { user } = useAuth();
   const cardDetails = subscriptionPlans[planType];
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const getPrice = () => {
     if (planType === 'free' || planType === 'lifetime') {
@@ -43,9 +49,21 @@ const PlanCard: React.FC<{
     if (planType === 'lifetime') return t('subscription.lifetime.price');
     return billingCycle === 'annual' ? t('subscription.year') : t('subscription.month');
   }
+  
+  const handleSelect = async () => {
+      setIsLoading(true);
+      await onSelect();
+      setIsLoading(false);
+  }
 
   const isLifetime = planType === 'lifetime';
-  const shouldBeDisabled = isActive;
+  const shouldBeDisabled = isActive || !user || isLoading;
+
+  let buttonText = t('subscription.selectPlan');
+  if (isActive) buttonText = t('subscription.currentPlan');
+  if (!user) buttonText = t('subscription.loginRequired');
+  if (isLoading) buttonText = t('toasts.redirectingToCheckout');
+
 
   return (
     <div className="relative">
@@ -83,12 +101,12 @@ const PlanCard: React.FC<{
                 </div>
             </div>
             <button
-                onClick={onSelect}
+                onClick={handleSelect}
                 disabled={shouldBeDisabled}
                 className={`mt-8 w-full py-3 px-4 rounded-lg font-bold transition-colors disabled:cursor-not-allowed
                         ${isActive ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400' : isLifetime ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-primary text-white hover:bg-primary-light'}`}
             >
-                {isActive ? t('subscription.currentPlan') : t('subscription.selectPlan')}
+                {buttonText}
             </button>
         </div>
     </div>
@@ -98,6 +116,7 @@ const PlanCard: React.FC<{
 const SubscriptionsTab: React.FC = () => {
   const { t } = useLocalization();
   const { plan, setPlan, billingCycle, setBillingCycle } = useSubscription();
+  const { user } = useAuth();
   
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     const toastElement = document.createElement('div');
@@ -109,10 +128,52 @@ const SubscriptionsTab: React.FC = () => {
     }, 3000);
   };
 
-  const handleSelectPlan = (newPlan: SubscriptionPlan) => {
-    if (plan === newPlan) return;
-    setPlan(newPlan);
-    showToast(`${t('toasts.planUpdated')} ${t(`subscription.plan.${newPlan}`)} plan is now active for testing.`, 'success');
+  const handleSelectPlan = async (newPlan: SubscriptionPlan) => {
+    if (plan === newPlan || !user) return;
+
+    if (newPlan === 'free') {
+      // Handle cancellation via Stripe portal, not here.
+      // For now, allow local downgrade for testing.
+      setPlan('free');
+      showToast(`${t('subscription.plan.free')} plan is now active for testing.`, 'success');
+      return;
+    }
+
+    const cardDetails = subscriptionPlans[newPlan];
+    let priceId: string | undefined;
+
+    if (newPlan === 'lifetime') {
+        priceId = cardDetails.priceIds?.oneTime;
+    } else {
+        priceId = billingCycle === 'annual' ? cardDetails.priceIds?.annual : cardDetails.priceIds?.monthly;
+    }
+    
+    if (!priceId || priceId.includes('REPLACE_WITH')) {
+        showToast(t('toasts.checkoutNotConfigured'), 'error');
+        console.error(`Stripe Price ID for ${newPlan} (${billingCycle}) is not configured.`);
+        return;
+    }
+
+    try {
+        const payload = {
+            priceId,
+            planType: newPlan,
+            successUrl: window.location.href + '?success=true',
+            cancelUrl: window.location.href + '?cancel=true',
+        };
+        
+        const { data } = await createStripeCheckoutSession(payload) as { data: { sessionId: string } };
+
+        const stripe = (window as any).Stripe(
+          // Your Stripe Publishable Key
+          'pk_test_51PJKPZ589O8KAxCG3bVz6lB5w1h6Z7j1hM3j3B3o3k3Y1r1k1i1d1o1g1g1V1u1i1y1R1j1m1a1C1i1e1r1y1e1p1E1F1'
+        );
+        
+        await stripe.redirectToCheckout({ sessionId: data.sessionId });
+    } catch (error) {
+        console.error("Stripe Checkout Error:", error);
+        showToast((error as Error).message || "An unexpected error occurred.", 'error');
+    }
   };
 
   return (
@@ -132,6 +193,12 @@ const SubscriptionsTab: React.FC = () => {
              <span className="ml-2 text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 px-2 py-0.5 rounded-full">{t('subscription.billing.annualDiscount')}</span>
         </div>
       </div>
+      
+       {!user && (
+          <p className="text-center text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 p-3 rounded-md">
+            {t('subscription.loginRequired')}
+          </p>
+        )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 items-stretch">
         <PlanCard planType="free" billingCycle={billingCycle} isActive={plan === 'free'} onSelect={() => handleSelectPlan('free')} />
