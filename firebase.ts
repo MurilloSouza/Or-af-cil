@@ -5,6 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBYmEDSoZ5vFwRvQw-flqlEBM6g2CU6-yc",
   authDomain: "projeto-unno---orcamento.firebaseapp.com",
