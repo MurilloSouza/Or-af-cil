@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { PricingItem } from '../../types';
 import { useLocalization } from '../../LanguageContext';
 
@@ -15,6 +15,14 @@ const inputClasses = "w-full px-3 py-2 border border-gray-300 rounded-md shadow-
 const PricingTab: React.FC<PricingTabProps> = ({ data, setData, showToast }) => {
     const { t } = useLocalization();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredData = useMemo(() => {
+        if (!searchTerm) return data;
+        return data.filter(item => 
+            item.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [data, searchTerm]);
 
     const handleUpdate = (id: string, field: keyof Omit<PricingItem, 'id'>, value: string | number) => {
         setData(currentData =>
@@ -117,17 +125,29 @@ const PricingTab: React.FC<PricingTabProps> = ({ data, setData, showToast }) => 
                 </p>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center">
-                <button onClick={handleAddItem} className="bg-primary hover:bg-primary-light text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    {t('pricing.addItem')}
-                </button>
-                <input type="file" ref={fileInputRef} onChange={handleFileImport} accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style={{ display: 'none' }} />
-                <button onClick={() => fileInputRef.current?.click()} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    {t('pricing.import')}
-                </button>
-                <button onClick={handleExport} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    {t('pricing.export')}
-                </button>
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+                 <div className="relative flex-grow w-full sm:w-auto">
+                    <input
+                        type="text"
+                        placeholder={t('pricing.searchPlaceholder')}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={`${inputClasses} pl-10`}
+                    />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
+                </div>
+                <div className="flex gap-4">
+                    <button onClick={handleAddItem} className="bg-primary hover:bg-primary-light text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        {t('pricing.addItem')}
+                    </button>
+                    <input type="file" ref={fileInputRef} onChange={handleFileImport} accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style={{ display: 'none' }} />
+                    <button onClick={() => fileInputRef.current?.click()} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        {t('pricing.import')}
+                    </button>
+                    <button onClick={handleExport} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        {t('pricing.export')}
+                    </button>
+                </div>
             </div>
 
              <div className="overflow-x-auto">
@@ -140,7 +160,7 @@ const PricingTab: React.FC<PricingTabProps> = ({ data, setData, showToast }) => 
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                        {data.map(item => (
+                        {filteredData.map(item => (
                             <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                 <td className="px-4 py-2">
                                     <input type="text" value={item.description} onChange={(e) => handleUpdate(item.id, 'description', e.target.value)} className={inputClasses}/>

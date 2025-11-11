@@ -4,12 +4,8 @@ export enum Tab {
   Budget = 'BUDGET',
   Calculo = 'CALCULO',
   Precificacao = 'PRECIFICACAO',
-  Subscriptions = 'SUBSCRIPTIONS',
   Settings = 'SETTINGS',
 }
-
-export type SubscriptionPlan = 'free' | 'basic-plus' | 'premium' | 'premium-plus' | 'lifetime';
-export type BillingCycle = 'monthly' | 'annual';
 
 export interface BudgetItem {
   id: number;
@@ -32,6 +28,10 @@ export interface SavedBudget {
   markupPercentage: number;
   roundUpQuantity: boolean;
 }
+
+// FIX: Add missing SubscriptionPlan and BillingCycle types to resolve import errors.
+export type SubscriptionPlan = 'free' | 'basic-plus' | 'premium' | 'premium-plus' | 'lifetime';
+export type BillingCycle = 'monthly' | 'annual';
 
 
 export interface CalculatedItem {

@@ -2,12 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CalculationGroup } from '../../types';
 import { useLocalization } from '../../LanguageContext';
 import { languages, Language } from '../../localization';
-import { useSubscription } from '../../SubscriptionContext';
-import { useAuth } from '../../AuthContext';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-
-const functions = getFunctions();
-const createStripePortalSession = httpsCallable(functions, 'createStripePortalSession');
+import { supportedCurrencies } from '../../LanguageContext';
 
 interface SettingsTabProps {
   markup: number;
@@ -24,90 +19,12 @@ interface SettingsTabProps {
 
 const inputClasses = "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-light focus:border-primary-light sm:text-sm bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 disabled:bg-gray-200 dark:disabled:bg-gray-700/50 disabled:cursor-not-allowed";
 
-const AuthForm: React.FC = () => {
-    const { t } = useLocalization();
-    const { signUpWithEmail, signInWithEmail } = useAuth();
-    const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState<string | null>(null);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-
-        if (authMode === 'signup') {
-            if (password !== confirmPassword) {
-                setError(t('settings.account.error.passwordsDoNotMatch'));
-                return;
-            }
-            try {
-                await signUpWithEmail(email, password);
-            } catch (err: any) {
-                setError(err.message);
-            }
-        } else {
-            try {
-                await signInWithEmail(email, password);
-            } catch (err: any) {
-                setError(err.message);
-            }
-        }
-    };
-    
-    const isLogin = authMode === 'login';
-
-    return (
-        <div className="max-w-md mx-auto">
-            <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4">
-                <button 
-                    onClick={() => { setAuthMode('login'); setError(null); }} 
-                    className={`flex-1 py-2 text-sm font-medium focus:outline-none ${isLogin ? 'text-primary border-b-2 border-primary' : 'text-subtle hover:text-gray-700 dark:hover:text-gray-300'}`}
-                >
-                    {t('settings.account.login')}
-                </button>
-                <button 
-                    onClick={() => { setAuthMode('signup'); setError(null); }}
-                    className={`flex-1 py-2 text-sm font-medium focus:outline-none ${!isLogin ? 'text-primary border-b-2 border-primary' : 'text-subtle hover:text-gray-700 dark:hover:text-gray-300'}`}
-                >
-                    {t('settings.account.signup')}
-                </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-                {error && <p className="text-red-500 text-sm text-center bg-red-100 dark:bg-red-900/50 p-2 rounded-md">{error}</p>}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.account.email')}</label>
-                    <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(null); }} className={inputClasses + " mt-1"} required />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.account.password')}</label>
-                    <input type="password" value={password} onChange={e => { setPassword(e.target.value); setError(null); }} className={inputClasses + " mt-1"} required />
-                </div>
-                {!isLogin && (
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.account.confirmPassword')}</label>
-                        <input type="password" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setError(null); }} className={inputClasses + " mt-1"} required />
-                    </div>
-                )}
-                <button type="submit" className="w-full bg-primary hover:bg-primary-light text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    {isLogin ? t('settings.account.login') : t('settings.account.signup')}
-                </button>
-            </form>
-        </div>
-    );
-}
-
 const SettingsTab: React.FC<SettingsTabProps> = ({ 
   markup, onMarkupChange, roundUp, onRoundUpChange, apiKey, onApiKeyChange, isUsingDefaultApiKey,
   calculationGroups, onInitiateFormulaImport, showToast
 }) => {
-  const { t, language, setLanguage } = useLocalization();
-  const { plan, planDetails } = useSubscription();
-  const { user, logout } = useAuth();
+  const { t, language, setLanguage, currency, setCurrency } = useLocalization();
   const [localApiKey, setLocalApiKey] = useState(apiKey);
-  const [isPortalLoading, setIsPortalLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -119,18 +36,10 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   }
   
   const handleImportClick = () => {
-    if (!planDetails.features.importExportFormulas) {
-        alert(t('subscription.upgradeRequired.message', { plan: plan }));
-        return;
-    }
     fileInputRef.current?.click();
   }
   
   const handleExportClick = () => {
-    if (!planDetails.features.importExportFormulas) {
-        alert(t('subscription.upgradeRequired.message', { plan: plan }));
-        return;
-    }
     handleExportFormulas();
   }
 
@@ -170,22 +79,13 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
     reader.readAsText(file);
   };
   
-  const handleManageSubscription = async () => {
-    setIsPortalLoading(true);
-    try {
-        const { data } = await createStripePortalSession({
-            returnUrl: window.location.href,
-        }) as { data: { url: string } };
-
-        window.location.href = data.url;
-    } catch (error) {
-        console.error("Error creating portal session:", error);
-        showToast(t('toasts.portalError'), 'error');
-    } finally {
-        setIsPortalLoading(false);
-    }
-  };
-
+  const currencyNames: Record<string, string> = {
+      BRL: 'Real Brasileiro (BRL)',
+      USD: 'Dólar Americano (USD)',
+      EUR: 'Euro (EUR)',
+      GBP: 'Libra Esterlina (GBP)',
+      JPY: 'Iene Japonês (JPY)'
+  }
 
   return (
     <div className="bg-surface dark:bg-gray-800 rounded-lg shadow-md p-6 animate-fade-in space-y-8">
@@ -193,32 +93,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
         <h2 className="text-2xl font-bold text-text dark:text-gray-100 mb-4">{t('settings.title')}</h2>
         
         <div className="space-y-6">
-          
-          <fieldset className="border border-gray-200 dark:border-gray-700 p-4 rounded-md">
-            <legend className="px-2 font-medium text-gray-800 dark:text-gray-200">{t('settings.account.title')}</legend>
-            <div className="mt-4">
-                {user ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                          <p className="text-sm text-gray-700 dark:text-gray-300">{t('settings.account.loggedInAs')} <span className="font-semibold">{user.email}</span></p>
-                          <button onClick={logout} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">{t('settings.account.logout')}</button>
-                      </div>
-                      {plan !== 'free' && (
-                        <div>
-                          <button 
-                            onClick={handleManageSubscription}
-                            disabled={isPortalLoading}
-                            className="w-full bg-secondary hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            {isPortalLoading ? t('toasts.redirectingToCheckout') : t('settings.account.manageSubscription')}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                ) : (
-                   <AuthForm />
-                )}
-            </div>
-          </fieldset>
           
           <fieldset className="border border-gray-200 dark:border-gray-700 p-4 rounded-md">
             <legend className="px-2 font-medium text-gray-800 dark:text-gray-200">{t('settings.language')}</legend>
@@ -259,6 +133,24 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
                 {t('settings.markup.description')}
               </p>
             </div>
+            <div className="mt-6">
+                <label htmlFor="currency-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('settings.financial.currency')}
+                </label>
+                <select
+                    id="currency-select"
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    className={inputClasses + " max-w-xs"}
+                >
+                    {supportedCurrencies.map(code => (
+                        <option key={code} value={code}>{currencyNames[code] || code}</option>
+                    ))}
+                </select>
+                <p className="mt-2 text-sm text-subtle dark:text-gray-400">
+                    {t('settings.financial.currencyDescription')}
+                </p>
+            </div>
           </fieldset>
 
           <fieldset className="border border-gray-200 dark:border-gray-700 p-4 rounded-md">
@@ -283,9 +175,9 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
             </div>
           </fieldset>
           
-          <fieldset className="border border-gray-200 dark:border-gray-700 p-4 rounded-md" disabled={!planDetails.features.aiAssistant}>
+          <fieldset className="border border-gray-200 dark:border-gray-700 p-4 rounded-md">
             <legend className="px-2 font-medium text-gray-800 dark:text-gray-200">{t('settings.ai')}</legend>
-            <div className={`mt-4 ${!planDetails.features.aiAssistant ? 'opacity-50' : ''}`}>
+            <div className="mt-4">
               <label htmlFor="api-key" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('settings.apiKey.label')}
               </label>
@@ -298,31 +190,30 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
                     value={localApiKey}
                     onChange={(e) => setLocalApiKey(e.target.value)}
                     placeholder={t('settings.apiKey.placeholder')}
-                    disabled={!planDetails.features.aiAssistant}
                 />
-                <button onClick={handleSaveApiKey} className="bg-primary hover:bg-primary-light text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400" disabled={!planDetails.features.aiAssistant}>
+                <button onClick={handleSaveApiKey} className="bg-primary hover:bg-primary-light text-white font-bold py-2 px-4 rounded-lg transition-colors">
                     {t('settings.apiKey.save')}
                 </button>
               </div>
-               {isUsingDefaultApiKey && planDetails.features.aiAssistant && (
+               {isUsingDefaultApiKey && (
                   <p className="mt-2 text-xs text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/50 p-2 rounded-md border border-yellow-200 dark:border-yellow-800">
                     {t('settings.apiKey.warning')}
                   </p>
                 )}
               <p className="mt-2 text-sm text-subtle dark:text-gray-400">
-                {planDetails.features.aiAssistant ? t('settings.apiKey.description') : t('subscription.upgradeRequired.message', { plan: plan })}
+                {t('settings.apiKey.description')}
               </p>
             </div>
           </fieldset>
           
           <fieldset className="border border-gray-200 dark:border-gray-700 p-4 rounded-md">
             <legend className="px-2 font-medium text-gray-800 dark:text-gray-200">{t('settings.formulas')}</legend>
-            <div className={`mt-4 flex flex-wrap gap-4 ${!planDetails.features.importExportFormulas ? 'opacity-50' : ''}`}>
+            <div className="mt-4 flex flex-wrap gap-4">
               <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" style={{ display: 'none' }} />
-              <button onClick={handleExportClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled={!planDetails.features.importExportFormulas} title={!planDetails.features.importExportFormulas ? t('subscription.upgradeRequired.message', { plan: plan }) : ''}>
+              <button onClick={handleExportClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                   {t('settings.formulas.export')}
               </button>
-              <button onClick={handleImportClick} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled={!planDetails.features.importExportFormulas} title={!planDetails.features.importExportFormulas ? t('subscription.upgradeRequired.message', { plan: plan }) : ''}>
+              <button onClick={handleImportClick} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                   {t('settings.formulas.import')}
               </button>
             </div>

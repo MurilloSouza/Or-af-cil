@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { ChatMessage, AiCalcItem, AiBudgetItem, AiParsedResponse, CalculationGroup, BudgetItem } from '../types';
 import { blobToBase64 } from '../utils';
-import { useSubscription } from '../SubscriptionContext';
 import { useLocalization } from '../LanguageContext';
 
 interface ChatPopupProps {
@@ -25,7 +24,6 @@ const ChatPopup: React.FC<ChatPopupProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { plan, planDetails } = useSubscription();
   const { t } = useLocalization();
 
   const scrollToBottom = () => {
@@ -108,10 +106,6 @@ Você DEVE responder APENAS com um único objeto JSON que corresponda ao esquema
 
   const handleSendMessage = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!planDetails.features.aiAssistant) {
-        showToast(t('subscription.upgradeRequired.message', { plan: plan }), 'error');
-        return;
-    }
     const trimmedInput = inputText.trim();
     if (!trimmedInput && !attachedFile) return;
 
@@ -217,10 +211,9 @@ Você DEVE responder APENAS com um único objeto JSON que corresponda ao esquema
       <div className={`fixed bottom-8 right-8 z-50 transition-transform duration-300 ${isOpen ? 'scale-0' : 'scale-100'}`}>
         <button
           onClick={onToggle}
-          className="bg-primary hover:bg-primary-light text-white rounded-full p-4 shadow-lg flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="bg-primary hover:bg-primary-light text-white rounded-full p-4 shadow-lg flex items-center justify-center"
           aria-label="Abrir chat do assistente"
-          disabled={!planDetails.features.aiAssistant}
-          title={!planDetails.features.aiAssistant ? t('subscription.upgradeRequired.message', {plan: plan}) : t('chat.open')}
+          title={t('chat.open')}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
             <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V5z" />
@@ -270,19 +263,14 @@ Você DEVE responder APENAS com um único objeto JSON que corresponda ao esquema
 
         {/* Input */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-          {!planDetails.features.aiAssistant && (
-              <div className="text-center text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-md mb-2">
-                  {t('subscription.upgradeRequired.message', { plan: plan })}
-              </div>
-          )}
-          {planDetails.features.aiAssistant && !apiKey && (
+          {!apiKey && (
               <div className="text-center text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-md mb-2">
                   A chave de API não está configurada. Vá para a aba 'Configurações' para adicioná-la.
               </div>
           )}
           <form onSubmit={handleSendMessage} className="flex items-center gap-2">
              <input ref={fileInputRef} type="file" hidden onChange={handleFileChange} accept="image/jpeg,image/png,image/webp" />
-             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-subtle dark:text-gray-400 hover:text-primary dark:hover:text-primary-light" aria-label="Anexar arquivo" disabled={!planDetails.features.aiAssistant}>
+             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-subtle dark:text-gray-400 hover:text-primary dark:hover:text-primary-light" aria-label="Anexar arquivo">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
              </button>
             <div className="flex-grow relative">
@@ -292,7 +280,7 @@ Você DEVE responder APENAS com um único objeto JSON que corresponda ao esquema
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder="Envie uma lista ou uma planta..."
                   className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-full shadow-sm focus:ring-primary-light focus:border-primary-light sm:text-sm bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                  disabled={isLoading || !planDetails.features.aiAssistant}
+                  disabled={isLoading}
                 />
                  {attachedFile && (
                     <div className="absolute bottom-full left-0 mb-1 w-full text-xs">
@@ -303,7 +291,7 @@ Você DEVE responder APENAS com um único objeto JSON que corresponda ao esquema
                     </div>
                 )}
             </div>
-            <button type="submit" className="bg-primary text-white rounded-full p-2 hover:bg-primary-light disabled:bg-gray-400" disabled={isLoading || (!inputText && !attachedFile) || !apiKey || !planDetails.features.aiAssistant}>
+            <button type="submit" className="bg-primary text-white rounded-full p-2 hover:bg-primary-light disabled:bg-gray-400" disabled={isLoading || (!inputText && !attachedFile) || !apiKey}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
           </form>

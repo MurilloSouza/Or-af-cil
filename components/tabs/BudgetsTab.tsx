@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { BudgetItem, SavedBudget, PdfSettings } from '../../types';
 import PdfCustomizer from '../PdfCustomizer';
 import { useLocalization } from '../../LanguageContext';
-import { useSubscription } from '../../SubscriptionContext';
 
 declare var XLSX: any;
 
@@ -11,6 +10,7 @@ interface BudgetsTabProps {
   markupPercentage: number;
   onUpdateItem: (id: number, field: keyof Omit<BudgetItem, 'id'>, value: string | number) => void;
   onDeleteItem: (id: number) => void;
+  onAddItem: () => void;
   onAutoPrice: () => void;
   budgetTitle: string;
   roundUpQuantity: boolean;
@@ -30,6 +30,7 @@ const BudgetsTab: React.FC<BudgetsTabProps> = ({
   markupPercentage,
   onUpdateItem,
   onDeleteItem,
+  onAddItem,
   onAutoPrice,
   budgetTitle,
   roundUpQuantity,
@@ -44,7 +45,6 @@ const BudgetsTab: React.FC<BudgetsTabProps> = ({
   setPdfSettings,
 }) => {
   const { t, formatCurrency } = useLocalization();
-  const { plan, planDetails } = useSubscription();
   const [isPdfCustomizerOpen, setPdfCustomizerOpen] = useState(false);
 
   const { totalCost, totalWithMarkup, sectorSubtotals } = useMemo(() => {
@@ -73,7 +73,7 @@ const BudgetsTab: React.FC<BudgetsTabProps> = ({
     });
 
     return { totalCost, totalWithMarkup, sectorSubtotals };
-  }, [items, markupPercentage, roundUpQuantity, t]);
+  }, [items, markupPercentage, roundUpQuantity, t, formatCurrency]);
 
   const handleExportPdf = () => {
     // Robust check for jsPDF and autoTable plugin
@@ -272,14 +272,6 @@ const BudgetsTab: React.FC<BudgetsTabProps> = ({
 
     showToast("Budget exported to Excel successfully!", "success");
   };
-  
-  const handleCustomizePdfClick = () => {
-    if (!planDetails.features.customizePdf) {
-        showToast(t('subscription.upgradeRequired.message', { plan: plan }), 'error');
-        return;
-    }
-    setPdfCustomizerOpen(true);
-  }
 
   const inputClasses = "w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-primary-light focus:border-primary-light sm:text-sm bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100";
   
@@ -287,6 +279,17 @@ const BudgetsTab: React.FC<BudgetsTabProps> = ({
     <div className="flex flex-col lg:flex-row gap-8 animate-fade-in">
         {/* Main Content */}
         <div className="flex-grow lg:w-3/4">
+            <div className="mb-4">
+                <button
+                    onClick={onAddItem}
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                    </svg>
+                    {t('budget.addLooseItem')}
+                </button>
+            </div>
             <div className="bg-surface dark:bg-gray-800 rounded-lg shadow-md">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left table-auto">
@@ -307,7 +310,7 @@ const BudgetsTab: React.FC<BudgetsTabProps> = ({
                                 const finalSubtotal = item.quantity * finalUnitPrice;
                                 return (
                                 <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                    <td className="px-4 py-2"><input type="text" value={item.description} onChange={(e) => onUpdateItem(item.id, 'description', e.target.value)} className={inputClasses} /></td>
+                                    <td className="px-4 py-2"><textarea value={item.description} onChange={(e) => onUpdateItem(item.id, 'description', e.target.value)} className={inputClasses + " resize-y min-h-[38px]"} rows={1} /></td>
                                     <td className="px-4 py-2"><input type="text" value={item.sector} onChange={(e) => onUpdateItem(item.id, 'sector', e.target.value)} className={inputClasses} /></td>
                                     <td className="px-4 py-2"><input type="number" value={item.quantity} onChange={(e) => onUpdateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)} className={`${inputClasses} text-right`} /></td>
                                     <td className="px-4 py-2"><input type="number" value={item.unitPrice} onChange={(e) => onUpdateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)} className={`${inputClasses} text-right`} /></td>
@@ -334,10 +337,10 @@ const BudgetsTab: React.FC<BudgetsTabProps> = ({
                  <div className="pt-2 border-t dark:border-gray-700 flex justify-between items-center text-lg"><span className="font-bold text-text dark:text-gray-100">{t('budget.summary.finalValue')}</span><span className="font-extrabold text-primary-dark dark:text-primary-light">{formatCurrency(totalWithMarkup)}</span></div>
             </div>
             {/* Actions */}
-            <div className="bg-surface dark:bg-gray-800 rounded-lg shadow-md p-4 space-y-3">
+            <div className="bg-surface dark:bg-gray-800 rounded-lg shadow-md p-4 space-y-3 sticky top-36">
                  <h3 className="text-lg font-bold text-text dark:text-gray-100 border-b dark:border-gray-700 pb-2">{t('budget.actions.title')}</h3>
-                 <button onClick={onAutoPrice} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled={!planDetails.features.pricing} title={!planDetails.features.pricing ? t('subscription.upgradeRequired.message', { plan: plan }) : ''}>{t('budget.actions.autoPrice')}</button>
-                 <button onClick={handleCustomizePdfClick} className="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled={!planDetails.features.customizePdf} title={!planDetails.features.customizePdf ? t('subscription.upgradeRequired.message', { plan: plan }) : ''}>{t('budget.actions.customizePdf')}</button>
+                 <button onClick={onAutoPrice} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">{t('budget.actions.autoPrice')}</button>
+                 <button onClick={() => setPdfCustomizerOpen(true)} className="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">{t('budget.actions.customizePdf')}</button>
                  <button onClick={handleExportPdf} className="w-full bg-primary hover:bg-primary-light text-white font-bold py-2 px-4 rounded-lg transition-colors">{t('budget.actions.exportPdf')}</button>
                  <button onClick={handleExportXlsx} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">{t('budget.actions.exportXlsx')}</button>
             </div>

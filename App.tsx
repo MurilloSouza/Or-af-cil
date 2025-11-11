@@ -6,307 +6,288 @@ import BudgetsTab from './components/tabs/BudgetsTab';
 import CalculoTab from './components/tabs/CalculoTab';
 import SettingsTab from './components/tabs/SettingsTab';
 import PricingTab from './components/tabs/PricingTab';
-import SubscriptionsTab from './components/tabs/SubscriptionsTab';
 import ChatPopup from './components/ChatPopup';
 import FormulaImporter from './components/FormulaImporter';
 import { runCalculationEngine } from './utils';
 import { useLocalization } from './LanguageContext';
-import { useSubscription } from './SubscriptionContext';
 
 const DEFAULT_API_KEY = '';
 
 const initialCalculationGroups: CalculationGroup[] = [
   {
     id: 'group-1',
-    name: 'Iluminação',
+    name: 'Lighting',
     variables: [
-      { id: 'var-1', code: 'LG', description: 'Luminárias Grandes' },
-      { id: 'var-2', code: 'LP', description: 'Luminárias Pequenas' },
-      { id: 'var-3', code: 'LE', description: 'Luminárias de Emergência' },
-      { id: 'var-f1', code: 'PROLONGADOR_CINZA', description: 'Prolongador Cinza', isFormulaResult: true, formulaId: 'formula-1' },
-      { id: 'var-f2', code: 'PROLONGADOR_VERMELHO', description: 'Prolongador Vermelho', isFormulaResult: true, formulaId: 'formula-2' },
+      { id: 'var-1', code: 'LG', description: 'Large Luminaires' },
+      { id: 'var-2', code: 'LP', description: 'Small Luminaires' },
+      { id: 'var-3', code: 'LE', description: 'Emergency Luminaires' },
+      { id: 'var-f1', code: 'GRAY_EXTENDER', description: 'Gray Extender', isFormulaResult: true, formulaId: 'formula-1' },
+      { id: 'var-f2', code: 'RED_EXTENDER', description: 'Red Extender', isFormulaResult: true, formulaId: 'formula-2' },
       { id: 'var-f3', code: 'PLUG', description: 'Plug', isFormulaResult: true, formulaId: 'formula-3' },
-      { id: 'var-f4', code: 'CABO', description: 'Cabo', isFormulaResult: true, formulaId: 'formula-4' },
-      { id: 'var-f5', code: 'PRENSA_CABO', description: 'Prensa Cabo', isFormulaResult: true, formulaId: 'formula-5' },
+      { id: 'var-f4', code: 'CABLE', description: 'Cable', isFormulaResult: true, formulaId: 'formula-4' },
+      { id: 'var-f5', code: 'CABLE_GLAND', description: 'Cable Gland', isFormulaResult: true, formulaId: 'formula-5' },
     ],
     formulas: [
-      { id: 'formula-1', name: 'Prolongador Cinza', value: '[LG]', unit: 'un' },
-      { id: 'formula-2', name: 'Prolongador Vermelho', value: '[LE]', unit: 'un' },
-      { id: 'formula-3', name: 'Plug', value: '[LG]', unit: 'un' },
-      { id: 'formula-4', name: 'Cabo', value: '([LG] * 3.5) + ([LP] * 3.5) + ([LE] * 3.5)', unit: 'metros' },
-      { id: 'formula-5', name: 'Prensa Cabo', value: '[LG] + [LP] + [LE]', unit: 'un' },
+      { id: 'formula-1', name: 'Gray Extender', value: '[LG]', unit: 'pc' },
+      { id: 'formula-2', name: 'Red Extender', value: '[LE]', unit: 'pc' },
+      { id: 'formula-3', name: 'Plug', value: '[LG]', unit: 'pc' },
+      { id: 'formula-4', name: 'Cable', value: '([LG] * 3.5) + ([LP] * 3.5) + ([LE] * 3.5)', unit: 'meters' },
+      { id: 'formula-5', name: 'Cable Gland', value: '[LG] + [LP] + [LE]', unit: 'pc' },
     ]
   },
   {
     id: 'group-2',
-    name: 'Perfilados',
+    name: 'Channels',
     variables: [
-      { id: 'var-p12', code: 'TIPO_PERFIL', description: 'Liso ou Perfurado', isInfo: true },
-      { id: 'var-p9', code: 'MEDIDA_PERFILADO', description: 'Medida do Perfilado', isInfo: true },
-      { id: 'var-p10', code: 'TAMANHO_FIXADORES', description: 'Tamanho (Fixadores)', isInfo: true },
-      { id: 'var-p11', code: 'TAMANHO_SAIDA_J', description: 'Tamanho (Saída J)', isInfo: true },
-      { id: 'var-p8', code: 'CHAPA', description: 'Chapa', isInfo: true },
-      { id: 'var-p1', code: 'PERFIL_METROS', description: 'Perfil', infoDependencies: ['MEDIDA_PERFILADO', 'TIPO_PERFIL', 'CHAPA'], unit: 'metros' },
-      { id: 'var-p2', code: 'EMENDA_T', description: 'Emenda T' },
-      { id: 'var-p3', code: 'EMENDA_L', description: 'Emenda L' },
-      { id: 'var-p4', code: 'EMENDA_X', description: 'Emenda X' },
-      { id: 'var-p5', code: 'CURVA_VERTICAL_EXTERNA', description: 'Curva Vertical Externa' },
-      { id: 'var-p6', code: 'ADAPTADOR_ELETROCALHA', description: 'Adaptador de eletrocalha p/ Perfil' },
-      { id: 'var-p7', code: 'SAIDA_J', description: 'Saída J de perfilado p/ Eletroduto' },
-      { id: 'var-pf1', code: 'EMENDA_I', description: 'Emenda I', isFormulaResult: true, formulaId: 'formula-p1' },
-      { id: 'var-pf2', code: 'GANCHO_CURTO_VERGALHAO', description: 'Gancho Curto vergalhão', isFormulaResult: true, formulaId: 'formula-p2' },
-      { id: 'var-pf6', code: 'CHUMBADOR', description: 'Chumbador', isFormulaResult: true, formulaId: 'formula-p6' },
-      { id: 'var-pf3', code: 'PARAFUSO_C_TRAVA', description: 'Parafuso c/ Trava', isFormulaResult: true, formulaId: 'formula-p3' },
-      { id: 'var-pf4', code: 'PORCA', description: 'Porca', isFormulaResult: true, formulaId: 'formula-p4' },
-      { id: 'var-pf5', code: 'ARRUELA', description: 'Arruela', isFormulaResult: true, formulaId: 'formula-p5' },
-      { id: 'var-pf7', code: 'VERGALHAO', description: 'Vergalhão', isFormulaResult: true, formulaId: 'formula-p7' },
-      { id: 'var-pf8', code: 'BOX_RETO', description: 'Box reto', isFormulaResult: true, formulaId: 'formula-p8'},
-      { id: 'var-pf9', code: 'CONDUITE_REFORCADO', description: 'Conduite Reforçado', isFormulaResult: true, formulaId: 'formula-p9'},
-      { id: 'var-pf10', code: 'ABRACADEIRA_TIPO_D', description: 'Abraçadeira tipo D', isFormulaResult: true, formulaId: 'formula-p10'}
+      { id: 'var-p12', code: 'CHANNEL_TYPE', description: 'Smooth or Perforated', isInfo: true },
+      { id: 'var-p9', code: 'CHANNEL_SIZE', description: 'Channel Size', isInfo: true },
+      { id: 'var-p10', code: 'FASTENERS_SIZE', description: 'Size (Fasteners)', isInfo: true },
+      { id: 'var-p11', code: 'J_OUTLET_SIZE', description: 'Size (J-Outlet)', isInfo: true },
+      { id: 'var-p8', code: 'GAUGE', description: 'Gauge', isInfo: true },
+      { id: 'var-p1', code: 'CHANNEL_METERS', description: 'Channel', infoDependencies: ['CHANNEL_SIZE', 'CHANNEL_TYPE', 'GAUGE'], unit: 'meters' },
+      { id: 'var-p2', code: 'T_SPLICE', description: 'T-Splice' },
+      { id: 'var-p3', code: 'L_SPLICE', description: 'L-Splice' },
+      { id: 'var-p4', code: 'X_SPLICE', description: 'X-Splice' },
+      { id: 'var-p5', code: 'EXTERNAL_VERTICAL_BEND', description: 'External Vertical Bend' },
+      { id: 'var-p6', code: 'TRAY_TO_CHANNEL_ADAPTER', description: 'Cable Tray to Channel Adapter' },
+      { id: 'var-p7', code: 'J_OUTLET', description: 'J-Outlet from Channel to Conduit' },
+      { id: 'var-pf1', code: 'I_SPLICE', description: 'I-Splice', isFormulaResult: true, formulaId: 'formula-p1' },
+      { id: 'var-pf2', code: 'SHORT_REBAR_HOOK', description: 'Short Rebar Hook', isFormulaResult: true, formulaId: 'formula-p2' },
+      { id: 'var-pf6', code: 'ANCHOR_BOLT', description: 'Anchor Bolt', isFormulaResult: true, formulaId: 'formula-p6' },
+      { id: 'var-pf3', code: 'LOCK_BOLT', description: 'Bolt with Lock', isFormulaResult: true, formulaId: 'formula-p3' },
+      { id: 'var-pf4', code: 'NUT', description: 'Nut', isFormulaResult: true, formulaId: 'formula-p4' },
+      { id: 'var-pf5', code: 'WASHER', description: 'Washer', isFormulaResult: true, formulaId: 'formula-p5' },
+      { id: 'var-pf7', code: 'REBAR', description: 'Rebar', isFormulaResult: true, formulaId: 'formula-p7' },
+      { id: 'var-pf8', code: 'STRAIGHT_BOX_CONNECTOR', description: 'Straight Box Connector', isFormulaResult: true, formulaId: 'formula-p8'},
+      { id: 'var-pf9', code: 'REINFORCED_CONDUIT', description: 'Reinforced Conduit', isFormulaResult: true, formulaId: 'formula-p9'},
+      { id: 'var-pf10', code: 'D_TYPE_CLAMP', description: 'D-type Clamp', isFormulaResult: true, formulaId: 'formula-p10'}
     ],
     formulas: [
-      { id: 'formula-p1', name: 'Emenda I', value: 'Math.ceil([PERFIL_METROS] / 3) * 2', unit: 'un' },
-      { id: 'formula-p2', name: 'Gancho Curto vergalhão', value: 'Math.ceil([PERFIL_METROS] / 1.5)', unit: 'un' },
-      { id: 'formula-p6', name: 'Chumbador', value: 'Math.ceil([PERFIL_METROS] / 1.5)', unit: 'un' },
-      { id: 'formula-p3', name: 'Parafuso c/ Trava', value: '([EMENDA_I] * 4) + ([EMENDA_T] * 12) + ([EMENDA_L] * 4) + ([EMENDA_X] * 8) + ([ADAPTADOR_ELETROCALHA] * 2) + ([CURVA_VERTICAL_EXTERNA] * 4) + ([SAIDA_J] * 1) + ([GANCHO_CURTO_VERGALHAO] * 1)', unit: 'un' },
-      { id: 'formula-p4', name: 'Porca', value: '([EMENDA_I] * 4) + ([EMENDA_T] * 12) + ([EMENDA_L] * 4) + ([EMENDA_X] * 8) + ([ADAPTADOR_ELETROCALHA] * 2) + ([CURVA_VERTICAL_EXTERNA] * 4) + ([SAIDA_J] * 1) + ([GANCHO_CURTO_VERGALHAO] * 1) + ([CHUMBADOR] * 3)', unit: 'un' },
-      { id: 'formula-p5', name: 'Arruela', value: '([EMENDA_I] * 4) + ([EMENDA_T] * 12) + ([EMENDA_L] * 4) + ([EMENDA_X] * 8) + ([ADAPTADOR_ELETROCALHA] * 2) + ([CURVA_VERTICAL_EXTERNA] * 4) + ([SAIDA_J] * 1) + ([GANCHO_CURTO_VERGALHAO] * 1) + ([CHUMBADOR] * 3)', unit: 'un' },
-      { id: 'formula-p7', name: 'Vergalhão', value: 'Math.ceil((([GANCHO_CURTO_VERGALHAO]) * 0.75) / 3)', unit: 'metros' },
-      { id: 'formula-p8', name: 'Box reto', value: '[SAIDA_J]', unit: 'un' },
-      { id: 'formula-p9', name: 'Conduite Reforçado', value: '[BOX_RETO] * 4', unit: 'metros' },
-      { id: 'formula-p10', name: 'Abraçadeira tipo D', value: '[BOX_RETO]', unit: 'un' }
+      { id: 'formula-p1', name: 'I-Splice', value: 'Math.ceil([CHANNEL_METERS] / 3) * 2', unit: 'pc' },
+      { id: 'formula-p2', name: 'Short Rebar Hook', value: 'Math.ceil([CHANNEL_METERS] / 1.5)', unit: 'pc' },
+      { id: 'formula-p6', name: 'Anchor Bolt', value: 'Math.ceil([CHANNEL_METERS] / 1.5)', unit: 'pc' },
+      { id: 'formula-p3', name: 'Bolt with Lock', value: '([I_SPLICE] * 4) + ([T_SPLICE] * 12) + ([L_SPLICE] * 4) + ([X_SPLICE] * 8) + ([TRAY_TO_CHANNEL_ADAPTER] * 2) + ([EXTERNAL_VERTICAL_BEND] * 4) + ([J_OUTLET] * 1) + ([SHORT_REBAR_HOOK] * 1)', unit: 'pc' },
+      { id: 'formula-p4', name: 'Nut', value: '([I_SPLICE] * 4) + ([T_SPLICE] * 12) + ([L_SPLICE] * 4) + ([X_SPLICE] * 8) + ([TRAY_TO_CHANNEL_ADAPTER] * 2) + ([EXTERNAL_VERTICAL_BEND] * 4) + ([J_OUTLET] * 1) + ([SHORT_REBAR_HOOK] * 1) + ([ANCHOR_BOLT] * 3)', unit: 'pc' },
+      { id: 'formula-p5', name: 'Washer', value: '([I_SPLICE] * 4) + ([T_SPLICE] * 12) + ([L_SPLICE] * 4) + ([X_SPLICE] * 8) + ([TRAY_TO_CHANNEL_ADAPTER] * 2) + ([EXTERNAL_VERTICAL_BEND] * 4) + ([J_OUTLET] * 1) + ([SHORT_REBAR_HOOK] * 1) + ([ANCHOR_BOLT] * 3)', unit: 'pc' },
+      { id: 'formula-p7', name: 'Rebar', value: 'Math.ceil((([SHORT_REBAR_HOOK]) * 0.75) / 3)', unit: 'meters' },
+      { id: 'formula-p8', name: 'Straight Box Connector', value: '[J_OUTLET]', unit: 'pc' },
+      { id: 'formula-p9', name: 'Reinforced Conduit', value: '[STRAIGHT_BOX_CONNECTOR] * 4', unit: 'meters' },
+      { id: 'formula-p10', name: 'D-type Clamp', value: '[STRAIGHT_BOX_CONNECTOR]', unit: 'pc' }
     ]
   },
   {
     id: 'group-3',
-    name: 'Rede Estruturada',
+    name: 'Structured Cabling',
     variables: [
-      // Informações Gerais
-      { id: 'var-l1', code: 'CATEGORIA', description: 'Categoria', isInfo: true },
-      { id: 'var-l2', code: 'MARCA', description: 'Marca', isInfo: true },
-      // Informações Rack
-      { id: 'var-l3', code: 'RACK_TIPO', description: 'Aberto ou fechado?', isInfo: true },
-      { id: 'var-l4', code: 'RACK_ALTURA', description: 'Altura (em Us)?', isInfo: true },
-      { id: 'var-l5', code: 'RACK_ORG_LATERAIS', description: 'Organizadores Laterais?', isInfo: true },
-      { id: 'var-l6', code: 'RACK_COR', description: 'Cor', isInfo: true },
-      { id: 'var-l7', code: 'RACK_MARCA', description: 'Marca', isInfo: true },
-      // Parâmetros (assumed per rack)
-      { id: 'var-l-rack-qty', code: 'QUANTIDADE_RACKS', description: 'Quantidade de Racks' },
-      { id: 'var-l8', code: 'CABO_UTP', description: 'Cabo UTP' },
-      { id: 'var-l9', code: 'CONECTOR_CM8V', description: 'Conector CM8V' },
+      { id: 'var-l1', code: 'CATEGORY', description: 'Category', isInfo: true },
+      { id: 'var-l2', code: 'BRAND', description: 'Brand', isInfo: true },
+      { id: 'var-l3', code: 'RACK_TYPE', description: 'Open or closed?', isInfo: true },
+      { id: 'var-l4', code: 'RACK_HEIGHT', description: 'Height (in U)?', isInfo: true },
+      { id: 'var-l5', code: 'RACK_SIDE_ORGANIZERS', description: 'Side Organizers?', isInfo: true },
+      { id: 'var-l6', code: 'RACK_COLOR', description: 'Color', isInfo: true },
+      { id: 'var-l7', code: 'RACK_BRAND', description: 'Brand', isInfo: true },
+      { id: 'var-l-rack-qty', code: 'NUM_RACKS', description: 'Number of Racks' },
+      { id: 'var-l8', code: 'UTP_CABLE', description: 'UTP Cable' },
+      { id: 'var-l9', code: 'CM8V_CONNECTOR', description: 'CM8V Connector' },
       { id: 'var-l10', code: 'PATCH_PANEL', description: 'Patch Panel' },
-      { id: 'var-l11', code: 'PATCH_CORD_1_5MM', description: 'Patch Cord 1,5mm' },
-      { id: 'var-l12', code: 'PATCH_CORD_2_5MM', description: 'Patch Cord 2,5mm' },
-      { id: 'var-l13', code: 'REGUA_TOMADAS', description: 'Régua de Tomadas' },
-      { id: 'var-l14', code: 'BANDEJA_FIXA', description: 'Bandeja Fixa' },
-      { id: 'var-l15', code: 'VELCRO_3M', description: 'Velcro 3 Metros' },
-      { id: 'var-l16', code: 'PLUG_RJ45', description: 'PLug RJ-45' },
-      { id: 'var-l17', code: 'CABO_OTICO_OM3_4V', description: 'Cabo ótico OM3 4 vias' },
-      { id: 'var-l18', code: 'PIG_TAIL_OM3_LC', description: 'Pig Tail ótico oM3 LC' },
-      { id: 'var-l19', code: 'PROTETOR_EMENDA_OTICA', description: 'Protetor de emenda ótica' },
-      { id: 'var-l20', code: 'ACOPLADOR_LC_DUPLEX', description: 'Acoplador LC duplex' },
-      { id: 'var-l21', code: 'CORDAO_OTICO_LC_DUPLEX_1_5M', description: 'Cordão ótico LC Duplex 1,5m' },
-      { id: 'var-l22', code: 'DIO_MINI_12FO', description: 'Dio mini 12 FO' },
-      // Fórmulas Variables
-      { id: 'var-lf1', code: 'GUIA_DE_CABO', description: 'Guia de cabo', isFormulaResult: true, formulaId: 'formula-l1' },
-      { id: 'var-lf2', code: 'PAINEL_FECHAMENTO', description: 'Painel de Fechamento', isFormulaResult: true, formulaId: 'formula-l2' },
-      { id: 'var-lf3', code: 'PORCA_GAIOLA', description: 'Porca Gaiola', isFormulaResult: true, formulaId: 'formula-l3' },
-      { id: 'var-lf4', code: 'ETIQUETAS', description: 'Etiquetas', isFormulaResult: true, formulaId: 'formula-l4' },
+      { id: 'var-l11', code: 'PATCH_CORD_1_5M', description: '1.5m Patch Cord' },
+      { id: 'var-l12', code: 'PATCH_CORD_2_5M', description: '2.5m Patch Cord' },
+      { id: 'var-l13', code: 'POWER_STRIP', description: 'Power Strip' },
+      { id: 'var-l14', code: 'FIXED_SHELF', description: 'Fixed Shelf' },
+      { id: 'var-l15', code: 'VELCRO_3M', description: '3 Meter Velcro' },
+      { id: 'var-l16', code: 'RJ45_PLUG', description: 'RJ-45 Plug' },
+      { id: 'var-l17', code: 'OM3_4FIBER_CABLE', description: 'OM3 4-fiber Optical Cable' },
+      { id: 'var-l18', code: 'PIGTAIL_OM3_LC', description: 'OM3 LC Optical Pigtail' },
+      { id: 'var-l19', code: 'OPTICAL_SPLICE_PROTECTOR', description: 'Optical Splice Protector' },
+      { id: 'var-l20', code: 'LC_DUPLEX_COUPLER', description: 'LC Duplex Coupler' },
+      { id: 'var-l21', code: 'OPTICAL_CORD_LC_DUPLEX_1_5M', description: '1.5m LC Duplex Optical Cord' },
+      { id: 'var-l22', code: 'MINI_DIO_12FO', description: 'Mini 12 FO DIO' },
+      { id: 'var-lf1', code: 'CABLE_GUIDE', description: 'Cable Guide', isFormulaResult: true, formulaId: 'formula-l1' },
+      { id: 'var-lf2', code: 'BLANKING_PANEL', description: 'Blanking Panel', isFormulaResult: true, formulaId: 'formula-l2' },
+      { id: 'var-lf3', code: 'CAGE_NUT', description: 'Cage Nut', isFormulaResult: true, formulaId: 'formula-l3' },
+      { id: 'var-lf4', code: 'LABELS', description: 'Labels', isFormulaResult: true, formulaId: 'formula-l4' },
     ],
     formulas: [
-      { id: 'formula-l1', name: 'Guia de cabo', value: '[PATCH_PANEL] * 2', unit: 'un' },
-      { id: 'formula-l2', name: 'Painel de Fechamento', value: '[GUIA_DE_CABO] * 2', unit: 'un' },
-      { id: 'formula-l3', name: 'Porca Gaiola', value: '((([PATCH_PANEL] * 4) + (([PATCH_PANEL] * 2) * 4) + ([REGUA_TOMADAS] * 4)) * 2)', unit: 'un' },
-      { id: 'formula-l4', name: 'Etiquetas', value: '[CONECTOR_CM8V]', unit: 'un' },
+      { id: 'formula-l1', name: 'Cable Guide', value: '[PATCH_PANEL] * 2', unit: 'pc' },
+      { id: 'formula-l2', name: 'Blanking Panel', value: '[CABLE_GUIDE] * 2', unit: 'pc' },
+      { id: 'formula-l3', name: 'Cage Nut', value: '((([PATCH_PANEL] * 4) + (([PATCH_PANEL] * 2) * 4) + ([POWER_STRIP] * 4)) * 2)', unit: 'pc' },
+      { id: 'formula-l4', name: 'Labels', value: '[CM8V_CONNECTOR]', unit: 'pc' },
     ]
   },
   {
     id: 'group-4',
-    name: 'CFTV',
+    name: 'CCTV',
     variables: [
-      // Informações Gerais
-      { id: 'var-cftv1', code: 'CATEGORIA', description: 'Categoria', isInfo: true },
-      { id: 'var-cftv2', code: 'MARCA', description: 'Marca', isInfo: true },
-      // Informações Rack
-      { id: 'var-cftv3', code: 'RACK_TIPO', description: 'Aberto ou fechado?', isInfo: true },
-      { id: 'var-cftv4', code: 'RACK_ALTURA', description: 'Altura (em Us)?', isInfo: true },
-      { id: 'var-cftv5', code: 'RACK_ORG_LATERAIS', description: 'Organizadores Laterais?', isInfo: true },
-      { id: 'var-cftv6', code: 'RACK_COR', description: 'Cor', isInfo: true },
-      { id: 'var-cftv7', code: 'RACK_MARCA', description: 'Marca', isInfo: true },
-      { id: 'var-cftv17-s1', code: 'CAMERA_HDCVI_SPEC1', description: 'Especificação 1 (Câmera HDCVI)', isInfo: true },
-      { id: 'var-cftv17-s2', code: 'CAMERA_HDCVI_SPEC2', description: 'Especificação 2 (Câmera HDCVI)', isInfo: true },
-      { id: 'var-cftv18-s1', code: 'GRAVADOR_HD_SPEC1', description: 'Especificação 1 (Gravador HD)', isInfo: true },
-      { id: 'var-cftv18-s2', code: 'GRAVADOR_HD_SPEC2', description: 'Especificação 2 (Gravador HD)', isInfo: true },
-      { id: 'var-cftv19-s1', code: 'POWER_BALUN_SPEC1', description: 'Especificação 1 (Power Balun)', isInfo: true },
-      { id: 'var-cftv19-s2', code: 'POWER_BALUN_SPEC2', description: 'Especificação 2 (Power Balun)', isInfo: true },
-      { id: 'var-cftv20-s1', code: 'CAMERA_IP_SPEC1', description: 'Especificação 1 (Câmera IP)', isInfo: true },
-      { id: 'var-cftv20-s2', code: 'CAMERA_IP_SPEC2', description: 'Especificação 2 (Câmera IP)', isInfo: true },
-      { id: 'var-cftv21-s1', code: 'GRAVADOR_NVR_SPEC1', description: 'Especificação 1 (Gravador NVR)', isInfo: true },
-      { id: 'var-cftv21-s2', code: 'GRAVADOR_NVR_SPEC2', description: 'Especificação 2 (Gravador NVR)', isInfo: true },
-      // Parâmetros
-      { id: 'var-cftv-rack-qty', code: 'QUANTIDADE_RACKS', description: 'Quantidade de Racks' },
-      { id: 'var-cftv8', code: 'CABO_UTP', description: 'Cabo UTP' },
-      { id: 'var-cftv9', code: 'CONECTOR_CM8V', description: 'Conector CM8V' },
+      { id: 'var-cftv1', code: 'CATEGORY', description: 'Category', isInfo: true },
+      { id: 'var-cftv2', code: 'BRAND', description: 'Brand', isInfo: true },
+      { id: 'var-cftv3', code: 'RACK_TYPE', description: 'Open or closed?', isInfo: true },
+      { id: 'var-cftv4', code: 'RACK_HEIGHT', description: 'Height (in U)?', isInfo: true },
+      { id: 'var-cftv5', code: 'RACK_SIDE_ORGANIZERS', description: 'Side Organizers?', isInfo: true },
+      { id: 'var-cftv6', code: 'RACK_COLOR', description: 'Color', isInfo: true },
+      { id: 'var-cftv7', code: 'RACK_BRAND', description: 'Brand', isInfo: true },
+      { id: 'var-cftv17-s1', code: 'HDCVI_CAM_SPEC1', description: 'Specification 1 (HDCVI Camera)', isInfo: true },
+      { id: 'var-cftv17-s2', code: 'HDCVI_CAM_SPEC2', description: 'Specification 2 (HDCVI Camera)', isInfo: true },
+      { id: 'var-cftv18-s1', code: 'HD_RECORDER_SPEC1', description: 'Specification 1 (HD Recorder)', isInfo: true },
+      { id: 'var-cftv18-s2', code: 'HD_RECORDER_SPEC2', description: 'Specification 2 (HD Recorder)', isInfo: true },
+      { id: 'var-cftv19-s1', code: 'POWER_BALUN_SPEC1', description: 'Specification 1 (Power Balun)', isInfo: true },
+      { id: 'var-cftv19-s2', code: 'POWER_BALUN_SPEC2', description: 'Specification 2 (Power Balun)', isInfo: true },
+      { id: 'var-cftv20-s1', code: 'IP_CAM_SPEC1', description: 'Specification 1 (IP Camera)', isInfo: true },
+      { id: 'var-cftv20-s2', code: 'IP_CAM_SPEC2', description: 'Specification 2 (IP Camera)', isInfo: true },
+      { id: 'var-cftv21-s1', code: 'NVR_RECORDER_SPEC1', description: 'Specification 1 (NVR Recorder)', isInfo: true },
+      { id: 'var-cftv21-s2', code: 'NVR_RECORDER_SPEC2', description: 'Specification 2 (NVR Recorder)', isInfo: true },
+      { id: 'var-cftv-rack-qty', code: 'NUM_RACKS', description: 'Number of Racks' },
+      { id: 'var-cftv8', code: 'UTP_CABLE', description: 'UTP Cable' },
+      { id: 'var-cftv9', code: 'CM8V_CONNECTOR', description: 'CM8V Connector' },
       { id: 'var-cftv10', code: 'PATCH_PANEL', description: 'Patch Panel' },
-      { id: 'var-cftv11', code: 'PATCH_CORD_1_5MM', description: 'Patch Cord 1,5mm' },
-      { id: 'var-cftv12', code: 'PATCH_CORD_2_5MM', description: 'Patch Cord 2,5mm' },
-      { id: 'var-cftv13', code: 'REGUA_TOMADAS', description: 'Régua de Tomadas' },
-      { id: 'var-cftv14', code: 'BANDEJA_FIXA', description: 'Bandeja Fixa' },
-      { id: 'var-cftv15', code: 'VELCRO_3M', description: 'Velcro 3 Metros' },
-      { id: 'var-cftv16', code: 'PLUG_RJ45', description: 'PLug RJ-45' },
-      { id: 'var-cftv17', code: 'CAMERA_HDCVI', description: 'Câmera HDCVI 2MPX 2,8mm (Dome ou bullet)' },
-      { id: 'var-cftv18', code: 'GRAVADOR_HD', description: 'Gravador c/ HD 4 TB' },
-      { id: 'var-cftv19', code: 'POWER_BALUN', description: 'Power Balun 16 Canais Full HD' },
-      { id: 'var-cftv20', code: 'CAMERA_IP', description: 'Câmera IP' },
-      { id: 'var-cftv21', code: 'GRAVADOR_NVR', description: 'Gravador NVR' },
-      { id: 'var-cftv22', code: 'SWITCH_POE', description: 'Switch POE' },
-      // Fórmulas Variables
-      { id: 'var-cftv-f1', code: 'GUIA_DE_CABO', description: 'Guia de cabo', isFormulaResult: true, formulaId: 'formula-cftv1' },
-      { id: 'var-cftv-f3', 'code': 'PORCA_GAIOLA', description: 'Porca Gaiola', isFormulaResult: true, formulaId: 'formula-cftv3' },
-      { id: 'var-cftv-f4', code: 'ETIQUETAS', description: 'Etiquetas', isFormulaResult: true, formulaId: 'formula-cftv4' },
+      { id: 'var-cftv11', code: 'PATCH_CORD_1_5M', description: '1.5m Patch Cord' },
+      { id: 'var-cftv12', code: 'PATCH_CORD_2_5M', description: '2.5m Patch Cord' },
+      { id: 'var-cftv13', code: 'POWER_STRIP', description: 'Power Strip' },
+      { id: 'var-cftv14', code: 'FIXED_SHELF', description: 'Fixed Shelf' },
+      { id: 'var-cftv15', code: 'VELCRO_3M', description: '3 Meter Velcro' },
+      { id: 'var-cftv16', code: 'RJ45_PLUG', description: 'RJ-45 Plug' },
+      { id: 'var-cftv17', code: 'HDCVI_CAMERA', description: 'HDCVI Camera 2MP 2.8mm (Dome or bullet)' },
+      { id: 'var-cftv18', code: 'HD_RECORDER', description: 'Recorder with 4 TB HDD' },
+      { id: 'var-cftv19', code: 'POWER_BALUN', description: '16 Channel Full HD Power Balun' },
+      { id: 'var-cftv20', code: 'IP_CAMERA', description: 'IP Camera' },
+      { id: 'var-cftv21', code: 'NVR_RECORDER', description: 'NVR Recorder' },
+      { id: 'var-cftv22', code: 'POE_SWITCH', description: 'POE Switch' },
+      { id: 'var-cftv-f1', code: 'CABLE_GUIDE', description: 'Cable Guide', isFormulaResult: true, formulaId: 'formula-cftv1' },
+      { id: 'var-cftv-f3', 'code': 'CAGE_NUT', description: 'Cage Nut', isFormulaResult: true, formulaId: 'formula-cftv3' },
+      { id: 'var-cftv-f4', code: 'LABELS', description: 'Labels', isFormulaResult: true, formulaId: 'formula-cftv4' },
     ],
     formulas: [
-      { id: 'formula-cftv1', name: 'Guia de cabo', value: '[PATCH_PANEL]', unit: 'un' },
-      { id: 'formula-cftv3', name: 'Porca Gaiola', value: '([PATCH_PANEL] * 4) + ([GUIA_DE_CABO] * 4) + ([REGUA_TOMADAS] * 4) * 1.1', unit: 'un' },
-      { id: 'formula-cftv4', name: 'Etiquetas', value: '[CONECTOR_CM8V]', unit: 'un' },
+      { id: 'formula-cftv1', name: 'Cable Guide', value: '[PATCH_PANEL]', unit: 'pc' },
+      { id: 'formula-cftv3', name: 'Cage Nut', value: '([PATCH_PANEL] * 4) + ([CABLE_GUIDE] * 4) + ([POWER_STRIP] * 4) * 1.1', unit: 'pc' },
+      { id: 'formula-cftv4', name: 'Labels', value: '[CM8V_CONNECTOR]', unit: 'pc' },
     ]
   },
   {
     id: 'group-5',
-    name: 'Eletrocalha Elétrica',
+    name: 'Electrical Cable Tray',
     variables: [
-      // Informações
-      { id: 'var-e1', code: 'CHAPA_ELETROCALHA', description: 'Chapa', isInfo: true },
-      { id: 'var-e2', code: 'MEDIDA_ELETROCALHA', description: 'Medida Eletrocalha (ex: 100x50)', isInfo: true },
-      { id: 'var-e3', code: 'TIPO_ELETROCALHA', description: 'Liso ou Perfurado', isInfo: true },
-      { id: 'var-e4', code: 'SAIDAS_LATERAIS_SIZE', description: 'Saídas laterais (tamanho)', isInfo: true },
-      { id: 'var-e5', code: 'PARAFUSOS_SIZE', description: 'Parafusos, porcas, arruela (tamanho)', isInfo: true },
-      // Parâmetros
-      { id: 'var-e6', code: 'ELETROCALHA_METROS', description: 'Eletrocalha (Metros)' },
-      { id: 'var-e7', code: 'TE_HORIZONTAL', description: 'Te Horizontal' },
-      { id: 'var-e8', code: 'CURVA_HORIZONTAL', description: 'Curva Horizontal' },
-      { id: 'var-e9', code: 'CURVA_VERTICAL_EXTERNA', description: 'Curva Vertical Externa' },
-      { id: 'var-e10', code: 'CURVA_VERTICAL_INTERNA', description: 'Curva Vertical Interna' },
-      { id: 'var-e11', code: 'REDUCAO', description: 'Redução' },
-      { id: 'var-e12', code: 'FLANGE_PAINEL', description: 'Flange para Painel' },
-      { id: 'var-e13', code: 'SAIDA_LATERAL_3_4', description: 'Saída Lateral de Eletroc/ Eletroduto 3/4"' },
-      { id: 'var-e14', code: 'SAIDA_LATERAL_1', description: 'Saída Lateral de Eletroc/ Eletroduto 1"' },
-      { id: 'var-e15', code: 'SEPTO_DIVISOR', description: 'Septo Divisor' },
-      { id: 'var-e16', code: 'TAMPA_ELETROCALHA', description: 'Tampa de Eletrocalha' },
-      { id: 'var-e17', code: 'CRUZETA', description: 'Cruzeta' },
-      { id: 'var-e18', code: 'SAIDA_LATERAL_PRENSA_CABO', description: 'Saída Lateral para prensa cabo' },
-      // Fórmulas
-      { id: 'var-ef1', code: 'SUPORTE_SUSPENSAO', description: 'Suporte de Suspensão', isFormulaResult: true, formulaId: 'formula-e1' },
-      { id: 'var-ef2', code: 'PARAFUSO_TRAVA', description: 'Parafuso c/ Trava', isFormulaResult: true, formulaId: 'formula-e2' },
-      { id: 'var-ef3', code: 'PORCA', description: 'Porca', isFormulaResult: true, formulaId: 'formula-e3' },
-      { id: 'var-ef4', code: 'ARRUELA', description: 'Arruela', isFormulaResult: true, formulaId: 'formula-e4' },
-      { id: 'var-ef5', code: 'CHUMBADOR', description: 'Chumbador', isFormulaResult: true, formulaId: 'formula-e5' },
-      { id: 'var-ef6', code: 'VERGALHAO', description: 'Vergalhão', isFormulaResult: true, formulaId: 'formula-e6' },
+      { id: 'var-e1', code: 'TRAY_GAUGE', description: 'Gauge', isInfo: true },
+      { id: 'var-e2', code: 'TRAY_SIZE', description: 'Cable Tray Size (e.g., 100x50)', isInfo: true },
+      { id: 'var-e3', code: 'TRAY_TYPE', description: 'Smooth or Perforated', isInfo: true },
+      { id: 'var-e4', code: 'SIDE_OUTLET_SIZE', description: 'Side outlets (size)', isInfo: true },
+      { id: 'var-e5', code: 'BOLT_SIZE', description: 'Bolts, nuts, washer (size)', isInfo: true },
+      { id: 'var-e6', code: 'TRAY_METERS', description: 'Cable Tray (Meters)' },
+      { id: 'var-e7', code: 'HORIZONTAL_TEE', description: 'Horizontal Tee' },
+      { id: 'var-e8', code: 'HORIZONTAL_BEND', description: 'Horizontal Bend' },
+      { id: 'var-e9', code: 'EXTERNAL_VERTICAL_BEND', description: 'External Vertical Bend' },
+      { id: 'var-e10', code: 'INTERNAL_VERTICAL_BEND', description: 'Internal Vertical Bend' },
+      { id: 'var-e11', code: 'REDUCER', description: 'Reducer' },
+      { id: 'var-e12', code: 'PANEL_FLANGE', description: 'Panel Flange' },
+      { id: 'var-e13', code: 'SIDE_OUTLET_3_4', description: 'Side Outlet to 3/4" Conduit' },
+      { id: 'var-e14', code: 'SIDE_OUTLET_1', description: 'Side Outlet to 1" Conduit' },
+      { id: 'var-e15', code: 'DIVIDING_SEPTUM', description: 'Dividing Septum' },
+      { id: 'var-e16', code: 'TRAY_COVER', description: 'Cable Tray Cover' },
+      { id: 'var-e17', code: 'CROSS', description: 'Cross' },
+      { id: 'var-e18', code: 'SIDE_OUTLET_GLAND', description: 'Side Outlet for Cable Gland' },
+      { id: 'var-ef1', code: 'SUSPENSION_SUPPORT', description: 'Suspension Support', isFormulaResult: true, formulaId: 'formula-e1' },
+      { id: 'var-ef2', code: 'LOCK_BOLT', description: 'Bolt with Lock', isFormulaResult: true, formulaId: 'formula-e2' },
+      { id: 'var-ef3', code: 'NUT', description: 'Nut', isFormulaResult: true, formulaId: 'formula-e3' },
+      { id: 'var-ef4', code: 'WASHER', description: 'Washer', isFormulaResult: true, formulaId: 'formula-e4' },
+      { id: 'var-ef5', code: 'ANCHOR_BOLT', description: 'Anchor Bolt', isFormulaResult: true, formulaId: 'formula-e5' },
+      { id: 'var-ef6', code: 'REBAR', description: 'Rebar', isFormulaResult: true, formulaId: 'formula-e6' },
     ],
     formulas: [
-      { id: 'formula-e1', name: 'Suporte de Suspensão', value: 'Math.ceil([ELETROCALHA_METROS] / 2)', unit: 'un' },
-      { id: 'formula-e2', name: 'Parafuso c/ Trava', value: '(Math.ceil([ELETROCALHA_METROS]/3)*2*4) + ([TE_HORIZONTAL] * 12) + ([FLANGE_PAINEL] * 4) + ([CURVA_HORIZONTAL] * 8) + ([CURVA_VERTICAL_EXTERNA] * 8) + ([CURVA_VERTICAL_INTERNA] * 8) + ([REDUCAO] * 8)', unit: 'un' },
-      { id: 'formula-e3', name: 'Porca', value: '[PARAFUSO_TRAVA] + ([SUPORTE_SUSPENSAO] * 3) + ([FLANGE_PAINEL] * 4) + ([CURVA_VERTICAL_INTERNA] * 8) + ([CURVA_VERTICAL_EXTERNA] * 8) + ([CURVA_HORIZONTAL] * 8) + ([TE_HORIZONTAL] * 12) + ([SAIDA_LATERAL_3_4] * 2) + ([SAIDA_LATERAL_1] * 2)', unit: 'un' },
-      { id: 'formula-e4', name: 'Arruela', value: '[PARAFUSO_TRAVA] + ([SUPORTE_SUSPENSAO] * 3) + ([FLANGE_PAINEL] * 4) + ([CURVA_VERTICAL_INTERNA] * 8) + ([CURVA_VERTICAL_EXTERNA] * 8) + ([CURVA_HORIZONTAL] * 8) + ([TE_HORIZONTAL] * 12) + ([SAIDA_LATERAL_3_4] * 2) + ([SAIDA_LATERAL_1] * 2)', unit: 'un' },
-      { id: 'formula-e5', name: 'Chumbador', value: 'Math.ceil([ELETROCALHA_METROS] / 2)', unit: 'un' },
-      { id: 'formula-e6', name: 'Vergalhão', value: 'Math.ceil(([SUPORTE_SUSPENSAO] * 0.75) / 3)', unit: 'metros' },
+      { id: 'formula-e1', name: 'Suspension Support', value: 'Math.ceil([TRAY_METERS] / 2)', unit: 'pc' },
+      { id: 'formula-e2', name: 'Bolt with Lock', value: '(Math.ceil([TRAY_METERS]/3)*2*4) + ([HORIZONTAL_TEE] * 12) + ([PANEL_FLANGE] * 4) + ([HORIZONTAL_BEND] * 8) + ([EXTERNAL_VERTICAL_BEND] * 8) + ([INTERNAL_VERTICAL_BEND] * 8) + ([REDUCER] * 8)', unit: 'pc' },
+      { id: 'formula-e3', name: 'Nut', value: '[LOCK_BOLT] + ([SUSPENSION_SUPPORT] * 3) + ([PANEL_FLANGE] * 4) + ([INTERNAL_VERTICAL_BEND] * 8) + ([EXTERNAL_VERTICAL_BEND] * 8) + ([HORIZONTAL_BEND] * 8) + ([HORIZONTAL_TEE] * 12) + ([SIDE_OUTLET_3_4] * 2) + ([SIDE_OUTLET_1] * 2)', unit: 'pc' },
+      { id: 'formula-e4', name: 'Washer', value: '[LOCK_BOLT] + ([SUSPENSION_SUPPORT] * 3) + ([PANEL_FLANGE] * 4) + ([INTERNAL_VERTICAL_BEND] * 8) + ([EXTERNAL_VERTICAL_BEND] * 8) + ([HORIZONTAL_BEND] * 8) + ([HORIZONTAL_TEE] * 12) + ([SIDE_OUTLET_3_4] * 2) + ([SIDE_OUTLET_1] * 2)', unit: 'pc' },
+      { id: 'formula-e5', name: 'Anchor Bolt', value: 'Math.ceil([TRAY_METERS] / 2)', unit: 'pc' },
+      { id: 'formula-e6', name: 'Rebar', value: 'Math.ceil(([SUSPENSION_SUPPORT] * 0.75) / 3)', unit: 'meters' },
     ]
   },
   {
     id: 'group-6',
-    name: 'Eletrocalha de Rede',
+    name: 'Network Cable Tray',
     variables: [
-      // Informações
-      { id: 'var-el1', code: 'CHAPA_ELETROCALHA_REDE', description: 'Chapa', isInfo: true },
-      { id: 'var-el2', code: 'MEDIDA_ELETROCALHA_REDE', description: 'Medida Eletrocalha (ex: 100x50)', isInfo: true },
-      { id: 'var-el3', code: 'TIPO_ELETROCALHA_REDE', description: 'Liso ou Perfurado', isInfo: true },
-      { id: 'var-el4', code: 'SAIDAS_LATERAIS_SIZE_REDE', description: 'Saídas laterais (tamanho)', isInfo: true },
-      { id: 'var-el5', code: 'PARAFUSOS_SIZE_REDE', description: 'Parafusos, porcas, arruela (tamanho)', isInfo: true },
-      // Parâmetros
-      { id: 'var-el6', code: 'ELETROCALHA_METROS_REDE', description: 'Eletrocalha (Metros)' },
-      { id: 'var-el7', code: 'TE_HORIZONTAL_REDE', description: 'Te Horizontal' },
-      { id: 'var-el8', code: 'CURVA_HORIZONTAL_REDE', description: 'Curva Horizontal' },
-      { id: 'var-el9', code: 'CURVA_VERTICAL_EXTERNA_REDE', description: 'Curva Vertical Externa' },
-      { id: 'var-el10', code: 'CURVA_VERTICAL_INTERNA_REDE', description: 'Curva Vertical Interna' },
-      { id: 'var-el11', code: 'REDUCAO_REDE', description: 'Redução' },
-      { id: 'var-el12', code: 'FLANGE_PAINEL_REDE', description: 'Flange para Painel' },
-      { id: 'var-el13', code: 'SAIDA_LATERAL_A_REDE', description: 'Saída Lateral de Eletroc/ Eletroduto' },
-      { id: 'var-el14', code: 'SAIDA_LATERAL_B_REDE', description: 'Saída Lateral de Eletroc/ Eletroduto' },
-      { id: 'var-el15', code: 'TAMPA_ELETROCALHA_REDE', description: 'Tampa de Eletrocalha' },
-      // Fórmulas
-      { id: 'var-elf1', code: 'SUPORTE_SUSPENSAO_REDE', description: 'Suporte de Suspensão', isFormulaResult: true, formulaId: 'formula-el1' },
-      { id: 'var-elf2', code: 'PARAFUSO_TRAVA_REDE', description: 'Parafuso c/ Trava', isFormulaResult: true, formulaId: 'formula-el2' },
-      { id: 'var-elf3', code: 'PORCA_REDE', description: 'Porca', isFormulaResult: true, formulaId: 'formula-el3' },
-      { id: 'var-elf4', code: 'ARRUELA_REDE', description: 'Arruela', isFormulaResult: true, formulaId: 'formula-el4' },
-      { id: 'var-elf5', code: 'CHUMBADOR_REDE', description: 'Chumbador', isFormulaResult: true, formulaId: 'formula-el5' },
-      { id: 'var-elf6', code: 'VERGALHAO_REDE', description: 'Vergalhão', isFormulaResult: true, formulaId: 'formula-el6' },
+      { id: 'var-el1', code: 'NET_TRAY_GAUGE', description: 'Gauge', isInfo: true },
+      { id: 'var-el2', code: 'NET_TRAY_SIZE', description: 'Cable Tray Size (e.g., 100x50)', isInfo: true },
+      { id: 'var-el3', code: 'NET_TRAY_TYPE', description: 'Smooth or Perforated', isInfo: true },
+      { id: 'var-el4', code: 'NET_SIDE_OUTLET_SIZE', description: 'Side outlets (size)', isInfo: true },
+      { id: 'var-el5', code: 'NET_BOLT_SIZE', description: 'Bolts, nuts, washer (size)', isInfo: true },
+      { id: 'var-el6', code: 'NET_TRAY_METERS', description: 'Cable Tray (Meters)' },
+      { id: 'var-el7', code: 'NET_HORIZONTAL_TEE', description: 'Horizontal Tee' },
+      { id: 'var-el8', code: 'NET_HORIZONTAL_BEND', description: 'Horizontal Bend' },
+      { id: 'var-el9', code: 'NET_EXTERNAL_VERTICAL_BEND', description: 'External Vertical Bend' },
+      { id: 'var-el10', code: 'NET_INTERNAL_VERTICAL_BEND', description: 'Internal Vertical Bend' },
+      { id: 'var-el11', code: 'NET_REDUCER', description: 'Reducer' },
+      { id: 'var-el12', code: 'NET_PANEL_FLANGE', description: 'Panel Flange' },
+      { id: 'var-el13', code: 'NET_SIDE_OUTLET_A', description: 'Side Outlet to Conduit A' },
+      { id: 'var-el14', code: 'NET_SIDE_OUTLET_B', description: 'Side Outlet to Conduit B' },
+      { id: 'var-el15', code: 'NET_TRAY_COVER', description: 'Cable Tray Cover' },
+      { id: 'var-elf1', code: 'NET_SUSPENSION_SUPPORT', description: 'Suspension Support', isFormulaResult: true, formulaId: 'formula-el1' },
+      { id: 'var-elf2', code: 'NET_LOCK_BOLT', description: 'Bolt with Lock', isFormulaResult: true, formulaId: 'formula-el2' },
+      { id: 'var-elf3', code: 'NET_NUT', description: 'Nut', isFormulaResult: true, formulaId: 'formula-el3' },
+      { id: 'var-elf4', code: 'NET_WASHER', description: 'Washer', isFormulaResult: true, formulaId: 'formula-el4' },
+      { id: 'var-elf5', code: 'NET_ANCHOR_BOLT', description: 'Anchor Bolt', isFormulaResult: true, formulaId: 'formula-el5' },
+      { id: 'var-elf6', code: 'NET_REBAR', description: 'Rebar', isFormulaResult: true, formulaId: 'formula-el6' },
     ],
     formulas: [
-      { id: 'formula-el1', name: 'Suporte de Suspensão', value: 'Math.ceil([ELETROCALHA_METROS_REDE] / 2)', unit: 'un' },
-      { id: 'formula-el2', name: 'Parafuso c/ Trava', value: '(Math.ceil([ELETROCALHA_METROS_REDE]/3)*2*4) + ([TE_HORIZONTAL_REDE] * 12) + ([FLANGE_PAINEL_REDE] * 4) + ([CURVA_HORIZONTAL_REDE] * 8) + ([CURVA_VERTICAL_EXTERNA_REDE] * 8) + ([CURVA_VERTICAL_INTERNA_REDE] * 8) + ([REDUCAO_REDE] * 8)', unit: 'un' },
-      { id: 'formula-el3', name: 'Porca', value: '[PARAFUSO_TRAVA_REDE] + ([SUPORTE_SUSPENSAO_REDE] * 3) + ([FLANGE_PAINEL_REDE] * 4) + ([CURVA_VERTICAL_INTERNA_REDE] * 8) + ([CURVA_VERTICAL_EXTERNA_REDE] * 8) + ([CURVA_HORIZONTAL_REDE] * 8) + ([TE_HORIZONTAL_REDE] * 12) + ([SAIDA_LATERAL_A_REDE] * 2) + ([SAIDA_LATERAL_B_REDE] * 2)', unit: 'un' },
-      { id: 'formula-el4', name: 'Arruela', value: '[PARAFUSO_TRAVA_REDE] + ([SUPORTE_SUSPENSAO_REDE] * 3) + ([FLANGE_PAINEL_REDE] * 4) + ([CURVA_VERTICAL_INTERNA_REDE] * 8) + ([CURVA_VERTICAL_EXTERNA_REDE] * 8) + ([CURVA_HORIZONTAL_REDE] * 8) + ([TE_HORIZONTAL_REDE] * 12) + ([SAIDA_LATERAL_A_REDE] * 2) + ([SAIDA_LATERAL_B_REDE] * 2)', unit: 'un' },
-      { id: 'formula-el5', name: 'Chumbador', value: 'Math.ceil([ELETROCALHA_METROS_REDE] / 2)', unit: 'un' },
-      { id: 'formula-el6', name: 'Vergalhão', value: 'Math.ceil(([SUPORTE_SUSPENSAO_REDE] * 0.75) / 3)', unit: 'metros' },
+      { id: 'formula-el1', name: 'Suspension Support', value: 'Math.ceil([NET_TRAY_METERS] / 2)', unit: 'pc' },
+      { id: 'formula-el2', name: 'Bolt with Lock', value: '(Math.ceil([NET_TRAY_METERS]/3)*2*4) + ([NET_HORIZONTAL_TEE] * 12) + ([NET_PANEL_FLANGE] * 4) + ([NET_HORIZONTAL_BEND] * 8) + ([NET_EXTERNAL_VERTICAL_BEND] * 8) + ([NET_INTERNAL_VERTICAL_BEND] * 8) + ([NET_REDUCER] * 8)', unit: 'pc' },
+      { id: 'formula-el3', name: 'Nut', value: '[NET_LOCK_BOLT] + ([NET_SUSPENSION_SUPPORT] * 3) + ([NET_PANEL_FLANGE] * 4) + ([NET_INTERNAL_VERTICAL_BEND] * 8) + ([NET_EXTERNAL_VERTICAL_BEND] * 8) + ([NET_HORIZONTAL_BEND] * 8) + ([NET_HORIZONTAL_TEE] * 12) + ([NET_SIDE_OUTLET_A] * 2) + ([NET_SIDE_OUTLET_B] * 2)', unit: 'pc' },
+      { id: 'formula-el4', name: 'Washer', value: '[NET_LOCK_BOLT] + ([NET_SUSPENSION_SUPPORT] * 3) + ([NET_PANEL_FLANGE] * 4) + ([NET_INTERNAL_VERTICAL_BEND] * 8) + ([NET_EXTERNAL_VERTICAL_BEND] * 8) + ([NET_HORIZONTAL_BEND] * 8) + ([NET_HORIZONTAL_TEE] * 12) + ([NET_SIDE_OUTLET_A] * 2) + ([NET_SIDE_OUTLET_B] * 2)', unit: 'pc' },
+      { id: 'formula-el5', name: 'Anchor Bolt', value: 'Math.ceil([NET_TRAY_METERS] / 2)', unit: 'pc' },
+      { id: 'formula-el6', name: 'Rebar', value: 'Math.ceil(([NET_SUSPENSION_SUPPORT] * 0.75) / 3)', unit: 'meters' },
     ]
   },
   {
     id: 'group-7',
-    name: 'Eletroduto',
+    name: 'Conduit',
     variables: [
-      // Informações
-      { id: 'var-ed1', code: 'ELETRODUTOS_SIZE', description: 'Eletrodutos (polegadas)', isInfo: true },
-      { id: 'var-ed2', code: 'CONDULETE_SIZE', description: 'Condulete Múltiplo (polegadas)', isInfo: true },
-      { id: 'var-ed3', code: 'FIXADORES_SIZE', description: 'Chumbadores e Parafusos (polegadas)', isInfo: true },
-      // Parâmetros
-      { id: 'var-ed4', code: 'ELETRODUTO', description: 'Eletroduto' },
-      { id: 'var-ed5', code: 'CURVA', description: 'Curva' },
-      { id: 'var-ed6', code: 'CONDULETE_MULTIPLO', description: 'Condulete Múltiplo' },
-      { id: 'var-ed7', code: 'TAMPA_1RJ45', description: 'Tampa para 1 RJ-45' },
-      { id: 'var-ed8', code: 'TAMPA_2RJ45', description: 'Tampa para 2 RJ-45' },
-      { id: 'var-ed9', code: 'TAMPA_2P_TOMADA_SIMPLES', description: 'Tampa p/ Condulete 2 Postos (Tomada Simples)' },
-      { id: 'var-ed10', code: 'TAMPA_3P_H_2TOMADAS', description: 'Tampa p/ Condulete 3 Postos Horizontais (2 Tomadas)' },
-      { id: 'var-ed11', code: 'TAMPA_1P_V_1INTERRUPTOR', description: 'Tampa p/ Condulete 1 Posto Vertical (1 Interruptor)' },
-      { id: 'var-ed12', code: 'TAMPA_2P_H_2INTERRUPTOR', description: 'Tampa p/ Condulete 2 Postos Horizontais (2 Interruptores)' },
-      { id: 'var-ed13', code: 'TAMPA_3P_H_3INTERRUPTOR', description: 'Tampa p/ Condulete 3 Postos Horizontais (3 Interruptores)' },
-      { id: 'var-ed14', code: 'TOMADA_1P_10A', description: 'Tomada 1 Posto 10A para Condulete' },
-      { id: 'var-ed15', code: 'TOMADA_1P_20A', description: 'Tomada 1 Posto 20A para Condulete' },
-      // Fórmulas
-      { id: 'var-edf1', code: 'LUVAS', description: 'Luvas', isFormulaResult: true, formulaId: 'formula-ed1' },
-      { id: 'var-edf2', code: 'ABRACADEIRA', description: 'Abraçadeira', isFormulaResult: true, formulaId: 'formula-ed2' },
-      { id: 'var-edf3', code: 'TAMPAO', description: 'Tampão', isFormulaResult: true, formulaId: 'formula-ed3' },
-      { id: 'var-edf4', code: 'CONECTOR_P_CONDULETE', description: 'Conector p/ Condulete', isFormulaResult: true, formulaId: 'formula-ed4' },
-      { id: 'var-edf5', code: 'TAMPA_CEGA_P_CONDULETE', description: 'Tampa Cega p/ Condulete', isFormulaResult: true, formulaId: 'formula-ed5' },
-      { id: 'var-edf6', code: 'CHUMBADOR', description: 'Chumbador', isFormulaResult: true, formulaId: 'formula-ed6' },
-      { id: 'var-edf7', code: 'VERGALHAO', description: 'Vergalhão', isFormulaResult: true, formulaId: 'formula-ed7' },
-      { id: 'var-edf8', code: 'PORCA_SEXTAVADA', description: 'Porca Sextavada', isFormulaResult: true, formulaId: 'formula-ed8' },
-      { id: 'var-edf9', code: 'ARRUELA_LISA', description: 'Arruela Lisa', isFormulaResult: true, formulaId: 'formula-ed9' },
-      { id: 'var-edf10', code: 'CONDUITE_REFORCADO', description: 'Conduite Reforçado', isFormulaResult: true, formulaId: 'formula-ed10' },
+      { id: 'var-ed1', code: 'CONDUIT_SIZE', description: 'Conduits (inches)', isInfo: true },
+      { id: 'var-ed2', code: 'CONDULET_SIZE', description: 'Multiple Condulet (inches)', isInfo: true },
+      { id: 'var-ed3', code: 'FASTENERS_SIZE', description: 'Anchors and Bolts (inches)', isInfo: true },
+      { id: 'var-ed4', code: 'CONDUIT', description: 'Conduit' },
+      { id: 'var-ed5', code: 'BEND', description: 'Bend' },
+      { id: 'var-ed6', code: 'MULTIPLE_CONDULET', description: 'Multiple Condulet' },
+      { id: 'var-ed7', code: 'COVER_1RJ45', description: 'Cover for 1 RJ-45' },
+      { id: 'var-ed8', code: 'COVER_2RJ45', description: 'Cover for 2 RJ-45' },
+      { id: 'var-ed9', code: 'COVER_2G_1S', description: '2-Gang Condulet Cover (Single Socket)' },
+      { id: 'var-ed10', code: 'COVER_3GH_2S', description: '3-Gang Horizontal Condulet Cover (2 Sockets)' },
+      { id: 'var-ed11', code: 'COVER_1GV_1SW', description: '1-Gang Vertical Condulet Cover (1 Switch)' },
+      { id: 'var-ed12', code: 'COVER_2GH_2SW', description: '2-Gang Horizontal Condulet Cover (2 Switches)' },
+      { id: 'var-ed13', code: 'COVER_3GH_3SW', description: '3-Gang Horizontal Condulet Cover (3 Switches)' },
+      { id: 'var-ed14', code: 'SOCKET_1G_10A', description: '1-Gang 10A Socket for Condulet' },
+      { id: 'var-ed15', code: 'SOCKET_1G_20A', description: '1-Gang 20A Socket for Condulet' },
+      { id: 'var-edf1', code: 'COUPLINGS', description: 'Couplings', isFormulaResult: true, formulaId: 'formula-ed1' },
+      { id: 'var-edf2', code: 'CLAMPS', description: 'Clamps', isFormulaResult: true, formulaId: 'formula-ed2' },
+      { id: 'var-edf3', code: 'PLUGS', description: 'Plugs/Caps', isFormulaResult: true, formulaId: 'formula-ed3' },
+      { id: 'var-edf4', code: 'CONDULET_CONNECTOR', description: 'Connector for Condulet', isFormulaResult: true, formulaId: 'formula-ed4' },
+      { id: 'var-edf5', code: 'BLANK_COVER', description: 'Blank Cover for Condulet', isFormulaResult: true, formulaId: 'formula-ed5' },
+      { id: 'var-edf6', code: 'ANCHOR_BOLT', description: 'Anchor Bolt', isFormulaResult: true, formulaId: 'formula-ed6' },
+      { id: 'var-edf7', code: 'REBAR', description: 'Rebar', isFormulaResult: true, formulaId: 'formula-ed7' },
+      { id: 'var-edf8', code: 'HEX_NUT', description: 'Hex Nut', isFormulaResult: true, formulaId: 'formula-ed8' },
+      { id: 'var-edf9', code: 'PLAIN_WASHER', description: 'Plain Washer', isFormulaResult: true, formulaId: 'formula-ed9' },
+      { id: 'var-edf10', code: 'REINFORCED_CONDUIT', description: 'Reinforced Conduit', isFormulaResult: true, formulaId: 'formula-ed10' },
     ],
     formulas: [
-      { id: 'formula-ed1', name: 'Luvas', value: 'Math.ceil([ELETRODUTO] / 3) + ([CURVA] * 2)', unit: 'un' },
-      { id: 'formula-ed2', name: 'Abraçadeira', value: 'Math.ceil(([ELETRODUTO] * 3) / 2)', unit: 'un' },
-      { id: 'formula-ed3', name: 'Tampão', value: '[ELETRODUTO] * 3', unit: 'un' },
-      { id: 'formula-ed4', name: 'Conector p/ Condulete', value: '[CONDULETE_MULTIPLO] * 2', unit: 'un' },
-      { id: 'formula-ed5', name: 'Tampa Cega p/ Condulete', value: '[CONDULETE_MULTIPLO] - [TAMPA_1RJ45] - [TAMPA_2RJ45] - [TAMPA_2P_TOMADA_SIMPLES] - [TAMPA_3P_H_2TOMADAS] - [TAMPA_1P_V_1INTERRUPTOR] - [TAMPA_2P_H_2INTERRUPTOR] - [TAMPA_3P_H_3INTERRUPTOR] - [TOMADA_1P_10A] - [TOMADA_1P_20A]', unit: 'un' },
-      { id: 'formula-ed6', name: 'Chumbador', value: 'Math.ceil(([ELETRODUTO] * 3) / 2)', unit: 'un' },
-      { id: 'formula-ed7', name: 'Vergalhão', value: 'Math.ceil(([CHUMBADOR] * 1.5) / 3)', unit: 'metros' },
-      { id: 'formula-ed8', name: 'Porca Sextavada', value: '[CHUMBADOR] * 3', unit: 'un' },
-      { id: 'formula-ed9', name: 'Arruela Lisa', value: '[CHUMBADOR] * 3', unit: 'un' },
-      { id: 'formula-ed10', name: 'Conduite Reforçado', value: '[ABRACADEIRA]', unit: 'metros' },
+      { id: 'formula-ed1', name: 'Couplings', value: 'Math.ceil([CONDUIT] / 3) + ([BEND] * 2)', unit: 'pc' },
+      { id: 'formula-ed2', name: 'Clamps', value: 'Math.ceil(([CONDUIT] * 3) / 2)', unit: 'pc' },
+      { id: 'formula-ed3', name: 'Plugs/Caps', value: '[CONDUIT] * 3', unit: 'pc' },
+      { id: 'formula-ed4', name: 'Connector for Condulet', value: '[MULTIPLE_CONDULET] * 2', unit: 'pc' },
+      { id: 'formula-ed5', name: 'Blank Cover for Condulet', value: '[MULTIPLE_CONDULET] - [COVER_1RJ45] - [COVER_2RJ45] - [COVER_2G_1S] - [COVER_3GH_2S] - [COVER_1GV_1SW] - [COVER_2GH_2SW] - [COVER_3GH_3SW] - [SOCKET_1G_10A] - [SOCKET_1G_20A]', unit: 'pc' },
+      { id: 'formula-ed6', name: 'Anchor Bolt', value: 'Math.ceil(([CONDUIT] * 3) / 2)', unit: 'pc' },
+      { id: 'formula-ed7', name: 'Rebar', value: 'Math.ceil(([ANCHOR_BOLT] * 1.5) / 3)', unit: 'meters' },
+      { id: 'formula-ed8', name: 'Hex Nut', value: '[ANCHOR_BOLT] * 3', unit: 'pc' },
+      { id: 'formula-ed9', name: 'Plain Washer', value: '[ANCHOR_BOLT] * 3', unit: 'pc' },
+      { id: 'formula-ed10', name: 'Reinforced Conduit', value: '[CLAMPS]', unit: 'meters' },
     ]
   },
   {
     id: 'group-8',
-    name: 'Audio e Video',
+    name: 'Audio and Video',
     variables: [
-      { id: 'var-av1', code: 'CABO_PT_VM_2X1_5MM', description: 'Cabo PT/VM - 2x1,5mm' },
+      { id: 'var-av1', code: 'CABLE_BK_RD_2X1_5MM', description: 'Black/Red Cable - 2x1.5mm' },
       { id: 'var-av2', code: 'RECEIVER', description: 'Receiver' },
-      { id: 'var-av3', code: 'ARANDELA_6', description: 'Arandela 6\'' },
-      { id: 'var-av4', code: 'CAIXA_DE_SOM', description: 'Caixa de Som' },
-      { id: 'var-av5', code: 'CABO_HDMI_10M', description: 'Cabo HDMI 10 Metros' },
+      { id: 'var-av3', code: 'CEILING_SPEAKER_6IN', description: '6" Ceiling Speaker' },
+      { id: 'var-av4', code: 'SPEAKER_BOX', description: 'Speaker Box' },
+      { id: 'var-av5', code: 'HDMI_CABLE_10M', description: '10 Meter HDMI Cable' },
       { id: 'var-av6', code: 'HDMI_KEYSTONE', description: 'HDMI Keystone' },
-      { id: 'var-av7', code: 'CABO_HDMI_1_5M', description: 'Cabo HDMI 1,5 Metros' },
+      { id: 'var-av7', code: 'HDMI_CABLE_1_5M', description: '1.5 Meter HDMI Cable' },
     ],
     formulas: []
   }
@@ -323,7 +304,6 @@ const createInitialInputs = (variables: FormulaVariable[]): CalculoInputState =>
 
 const App: React.FC = () => {
   const { t, language } = useLocalization();
-  const { plan, planDetails } = useSubscription();
   const [activeTab, setActiveTab] = useState<Tab>(Tab.Budget);
   
   // States for the active, working budget
@@ -377,23 +357,6 @@ const App: React.FC = () => {
     }, 3000);
   };
 
-  // Handle Stripe Redirects
-  useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    if (query.get('success')) {
-      showToast(t('toasts.paymentSuccess'), 'success');
-      setActiveTab(Tab.Subscriptions);
-    }
-    if (query.get('cancel')) {
-      showToast(t('toasts.paymentCancelled'), 'error');
-    }
-    // Clean up URL
-    if (query.has('success') || query.has('cancel')) {
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [t]);
-
-
   // --- Budget Management Logic ---
 
   const createNewBudget = (setActive = true): string => {
@@ -426,10 +389,6 @@ const App: React.FC = () => {
   };
 
   const handleNewBudget = () => {
-      if (savedBudgets.length >= planDetails.maxBudgets) {
-        showToast(t('subscription.limit.budgets', { max: planDetails.maxBudgets }), 'error');
-        return;
-      }
       const newId = createNewBudget(false);
       // Reset working state
       setBudgetTitle(t('budget.newBudget'));
@@ -565,10 +524,6 @@ const App: React.FC = () => {
   }, [activeGroupId, calculationGroups]);
 
   const addItemsToBudget = (itemsToAdd: CalculatedItem[], sector: string) => {
-    if (budgetItems.length + itemsToAdd.length > planDetails.maxItemsPerBudget) {
-        showToast(t('subscription.limit.items', { max: planDetails.maxItemsPerBudget }), 'error');
-        return;
-    }
     setBudgetItems(currentItems => {
       const updatedItems = [...currentItems];
       itemsToAdd.forEach(itemToAdd => {
@@ -591,11 +546,18 @@ const App: React.FC = () => {
     });
   };
   
+  const handleAddNewBudgetItem = () => {
+    const newItem: BudgetItem = {
+      id: Date.now() + Math.random(),
+      description: '',
+      quantity: 1,
+      unitPrice: 0,
+      sector: '',
+    };
+    setBudgetItems(currentItems => [newItem, ...currentItems]);
+  };
+  
   const handleAiAddItemsToBudget = (parsedItems: AiBudgetItem[]) => {
-    if (budgetItems.length + parsedItems.length > planDetails.maxItemsPerBudget) {
-        showToast(t('subscription.limit.items', { max: planDetails.maxItemsPerBudget }), 'error');
-        return;
-    }
     setBudgetItems(currentItems => {
         const updatedItems = [...currentItems];
         parsedItems.forEach(itemToAdd => {
@@ -663,10 +625,6 @@ const App: React.FC = () => {
   };
 
   const handleAutoPriceBudget = () => {
-    if (!planDetails.features.pricing) {
-        showToast(t('subscription.upgradeRequired.message', { plan: plan }), 'error');
-        return;
-    }
     if (pricingData.length === 0) {
         showToast(t('toasts.emptyPricingData'), "error");
         return;
@@ -712,14 +670,6 @@ const App: React.FC = () => {
   };
 
   const handleAddGroup = (name?: string) => {
-    if (!planDetails.features.addGroups) {
-        showToast(t('subscription.upgradeRequired.message', { plan: plan }), 'error');
-        return;
-    }
-    if (planDetails.maxGroups !== Infinity && calculationGroups.length >= planDetails.maxGroups) {
-        showToast(t('subscription.limit.groups', { max: planDetails.maxGroups, plan: t(`subscription.plan.${plan}`) }), 'error');
-        return;
-    }
     const newId = `group-${Date.now()}`;
     const newName = name?.trim() ? name.trim() : t('calculator.newGroup');
     const newGroup: CalculationGroup = { id: newId, name: newName, variables: [], formulas: [] };
@@ -927,6 +877,7 @@ const App: React.FC = () => {
             markupPercentage={markupPercentage}
             onUpdateItem={handleUpdateBudgetItem}
             onDeleteItem={handleDeleteBudgetItem}
+            onAddItem={handleAddNewBudgetItem}
             onAutoPrice={handleAutoPriceBudget}
             budgetTitle={budgetTitle}
             roundUpQuantity={roundUpQuantity}
@@ -966,8 +917,6 @@ const App: React.FC = () => {
         );
        case Tab.Precificacao:
         return <PricingTab data={pricingData} setData={setPricingData} showToast={showToast} />;
-       case Tab.Subscriptions:
-        return <SubscriptionsTab />;
       case Tab.Settings:
         return <SettingsTab 
                   markup={markupPercentage} 
@@ -990,10 +939,9 @@ const App: React.FC = () => {
     { id: Tab.Dashboard, label: t('tabs.dashboard') },
     { id: Tab.Budget, label: t('tabs.budget') },
     { id: Tab.Calculo, label: t('tabs.calculator') },
-    planDetails.features.pricing ? { id: Tab.Precificacao, label: t('tabs.pricing') } : null,
-    { id: Tab.Subscriptions, label: t('tabs.subscriptions') },
+    { id: Tab.Precificacao, label: t('tabs.pricing') },
     { id: Tab.Settings, label: t('tabs.settings') }
-  ].filter(Boolean) as { id: Tab, label: string }[];
+  ];
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
